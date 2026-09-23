@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "795830182196",
+    "project_id": "chordnerd",
+    "storage_bucket": "chordnerd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:795830182196:android:09d65739d538a3c2f80561",
+        "android_client_info": {
+          "package_name": "com.example.mobile_app_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "795830182196-bkb09kteamrupft421ugkkkpeo1skc42.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAL616t8ij0HfOpjpEpbm1lSz2Z1FcK9Vo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "795830182196-bkb09kteamrupft421ugkkkpeo1skc42.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

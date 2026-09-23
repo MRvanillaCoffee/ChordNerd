@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'app/theme/app_theme.dart';
+import 'screens/login_screen.dart';
 // TODO: import 'firebase_options.dart' once generated via `flutterfire configure`
 // TODO: import 'app/router/app_router.dart' once auth-state routing is built
 // TODO: import 'screens/auth/login_screen.dart' once built
@@ -36,23 +37,7 @@ class ChordNerdApp extends StatelessWidget {
       // TODO: replace `home` with AppRouter (StreamBuilder on
       // FirebaseAuth.authStateChanges()) once login/register screens exist —
       // for now this is a placeholder so the app boots and shows the theme.
-      home: const _PlaceholderHome(),
-    );
-  }
-}
-
-class _PlaceholderHome extends StatelessWidget {
-  const _PlaceholderHome();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'Chord Nerd',
-          style: Theme.of(context).textTheme.headlineLarge,
-        ),
-      ),
+      home: const LoginScreen(),
     );
   }
 }
