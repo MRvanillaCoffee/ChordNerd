@@ -13,7 +13,7 @@ dependencies:
   # Firebase
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
-  cloud_firestore: ^5.4.4
+  firebase_database: ^11.1.4
   firebase_storage: ^12.3.4
 
   # State management
@@ -32,8 +32,9 @@ dependencies:
   intl: ^0.19.0
   shared_preferences: ^2.3.2
 
-  # Google sign-in
-  google_sign_in: ^6.2.2
+  # Google, Facebook, and Microsoft sign-in all go through Firebase Auth's
+  # built-in OAuthProvider — no separate native SDK packages needed.
+  # See auth_service.dart for the sign-in calls.
 
 dev_dependencies:
   flutter_test:

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
-
-// TODO: import '../../services/auth_service.dart' once built, and call
-// AuthService.signInWithEmail / signUpWithEmail / signInWithGoogle from
-// the button handlers below instead of the placeholder prints.
-
-enum _AuthMode { login, signUp }
+import '../../services/auth_service.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  _AuthMode _mode = _AuthMode.login;
   bool _obscurePassword = true;
   bool _isSubmitting = false;
 
@@ -33,20 +29,94 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleSubmit() async {
     setState(() => _isSubmitting = true);
 
-    // TODO: replace with real auth calls, e.g.:
-    // if (_mode == _AuthMode.login) {
-    //   await AuthService.signInWithEmail(_emailController.text, _passwordController.text);
-    // } else {
-    //   await AuthService.signUpWithEmail(_emailController.text, _passwordController.text);
-    // }
-
-    await Future.delayed(const Duration(milliseconds: 600)); // placeholder
+    try {
+      await AuthService.signInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      _showMessage('Logged in successfully', isError: false);
+    } on FirebaseAuthException catch (e) {
+      _showMessage(_friendlyAuthError(e), isError: true);
+    } catch (e) {
+      _showMessage('Something went wrong. Please try again.', isError: true);
+    }
 
     if (mounted) setState(() => _isSubmitting = false);
   }
 
+  void _showMessage(String message, {required bool isError}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: AppTextStyles.bodyPrimary),
+        backgroundColor: isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  String _friendlyAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account found with that email.';
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
+      case 'invalid-email':
+        return 'That email address looks invalid.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return e.message ?? 'Login failed. Please try again.';
+    }
+  }
+
+  void _goToRegister() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+    );
+  }
+
   Future<void> _handleGoogleSignIn() async {
-    // TODO: call AuthService.signInWithGoogle()
+    try {
+      await AuthService.signInWithGoogle();
+      _showMessage('Logged in with Google', isError: false);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[google] FirebaseAuthException: ${e.code} — ${e.message}');
+      _showMessage(_friendlyAuthError(e), isError: true);
+    } catch (e) {
+      debugPrint('[google] unexpected error: $e');
+      _showMessage('Google sign-in failed. Please try again.', isError: true);
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    try {
+      await AuthService.signInWithFacebook();
+      _showMessage('Logged in with Facebook', isError: false);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[facebook] FirebaseAuthException: ${e.code} — ${e.message}');
+      _showMessage(_friendlyAuthError(e), isError: true);
+    } catch (e) {
+      debugPrint('[facebook] unexpected error: $e');
+      _showMessage('Facebook sign-in failed. Please try again.', isError: true);
+    }
+  }
+
+  Future<void> _handleGitHubSignIn() async {
+    try {
+      await AuthService.signInWithGitHub();
+      _showMessage('Logged in with GitHub', isError: false);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[github] FirebaseAuthException: ${e.code} — ${e.message}');
+      _showMessage(_friendlyAuthError(e), isError: true);
+    } catch (e) {
+      debugPrint('[github] unexpected error: $e');
+      _showMessage('GitHub sign-in failed. Please try again.', isError: true);
+    }
   }
 
   @override
@@ -61,21 +131,25 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               _buildHeader(),
               const SizedBox(height: 36),
-              _buildModeToggle(),
-              const SizedBox(height: 24),
               _buildEmailField(),
               const SizedBox(height: 16),
               _buildPasswordField(),
               const SizedBox(height: 10),
-              if (_mode == _AuthMode.login) _buildForgotPassword(),
+              _buildForgotPassword(),
               const SizedBox(height: 22),
               _buildSubmitButton(),
+              const SizedBox(height: 16),
+              _buildSignUpLink(),
               const SizedBox(height: 14),
               _buildStreakTeaser(),
               const SizedBox(height: 18),
               _buildDivider(),
               const SizedBox(height: 18),
               _buildGoogleButton(),
+              const SizedBox(height: 10),
+              _buildFacebookButton(),
+              const SizedBox(height: 10),
+              _buildGitHubButton(),
             ],
           ),
         ),
@@ -110,39 +184,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildModeToggle() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _buildModeTab('Log in', _AuthMode.login)),
-          Expanded(child: _buildModeTab('Sign up', _AuthMode.signUp)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModeTab(String label, _AuthMode mode) {
-    final isSelected = _mode == mode;
+  Widget _buildSignUpLink() {
     return GestureDetector(
-      onTap: () => setState(() => _mode = mode),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceSelected : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.bodyPrimary.copyWith(
-            fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-            color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
-          ),
+      onTap: _goToRegister,
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: AppTextStyles.bodySecondary,
+          children: [
+            const TextSpan(text: "Don't have an account? "),
+            TextSpan(
+              text: 'Sign up',
+              style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
@@ -217,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: AppColors.onAccentPrimary,
               ),
             )
-          : Text(_mode == _AuthMode.login ? 'Log in' : 'Create account'),
+          : const Text('Log in'),
     );
   }
 
@@ -259,6 +314,44 @@ class _LoginScreenState extends State<LoginScreen> {
           const Icon(Icons.g_mobiledata_rounded, size: 20, color: AppColors.accentLight),
           const SizedBox(width: 6),
           Text('Continue with Google', style: AppTextStyles.bodyPrimary),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFacebookButton() {
+    return OutlinedButton(
+      onPressed: _handleFacebookSignIn,
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppColors.border, width: 0.5),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.facebook_rounded, size: 20, color: AppColors.accentLight),
+          const SizedBox(width: 6),
+          Text('Continue with Facebook', style: AppTextStyles.bodyPrimary),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGitHubButton() {
+    return OutlinedButton(
+      onPressed: _handleGitHubSignIn,
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppColors.border, width: 0.5),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.code_rounded, size: 18, color: AppColors.accentLight),
+          const SizedBox(width: 6),
+          Text('Continue with GitHub', style: AppTextStyles.bodyPrimary),
         ],
       ),
     );

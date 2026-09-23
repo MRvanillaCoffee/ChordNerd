@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '795830182196',
     projectId: 'chordnerd',
     authDomain: 'chordnerd.firebaseapp.com',
+    databaseURL: 'https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chordnerd.firebasestorage.app',
   );
 
@@ -54,24 +55,25 @@ class DefaultFirebaseOptions {
     appId: '1:795830182196:android:09d65739d538a3c2f80561',
     messagingSenderId: '795830182196',
     projectId: 'chordnerd',
+    databaseURL: 'https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chordnerd.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCnFkzboOIY-3K600W7hr0WM2Szfuu_FK0',
     appId: '1:795830182196:ios:b81751905c669a3ff80561',
     messagingSenderId: '795830182196',
     projectId: 'chordnerd',
+    databaseURL: 'https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chordnerd.firebasestorage.app',
     iosClientId: '795830182196-uohubc9t00167cli7c3hb1i00tf8tkth.apps.googleusercontent.com',
     iosBundleId: 'com.example.mobileAppProject',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCnFkzboOIY-3K600W7hr0WM2Szfuu_FK0',
     appId: '1:795830182196:ios:b81751905c669a3ff80561',
     messagingSenderId: '795830182196',
     projectId: 'chordnerd',
+    databaseURL: 'https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chordnerd.firebasestorage.app',
     iosClientId: '795830182196-uohubc9t00167cli7c3hb1i00tf8tkth.apps.googleusercontent.com',
     iosBundleId: 'com.example.mobileAppProject',
@@ -83,6 +85,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '795830182196',
     projectId: 'chordnerd',
     authDomain: 'chordnerd.firebaseapp.com',
+    databaseURL: 'https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chordnerd.firebasestorage.app',
   );
 }

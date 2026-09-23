@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "795830182196",
+    "firebase_url": "https://chordnerd-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "chordnerd",
     "storage_bucket": "chordnerd.firebasestorage.app"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "795830182196-bkb09kteamrupft421ugkkkpeo1skc42.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "795830182196-uohubc9t00167cli7c3hb1i00tf8tkth.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mobileAppProject"
+              }
             }
           ]
         }
