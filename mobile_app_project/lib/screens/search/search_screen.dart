@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
 
 // TODO: wire real search — hit the local `songs` collection in Realtime
@@ -132,6 +133,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ? AppColors.accentStreak.withValues(alpha: 0.15)
         : AppColors.accentPrimary.withValues(alpha: 0.15);
     final iconColor = result.isChord ? AppColors.accentStreak : AppColors.accentPrimary;
+    final cardGradient = result.isChord ? AppGradients.cardTintMint : AppGradients.cardTintPink;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -140,7 +142,7 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: AppColors.surfaceCard, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(gradient: cardGradient, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
             Container(

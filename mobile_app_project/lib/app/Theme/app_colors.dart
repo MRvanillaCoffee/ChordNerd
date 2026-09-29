@@ -6,7 +6,7 @@ class AppColors {
   AppColors._();
 
   // Backgrounds & surfaces
-  static const Color background = Color(0xFF0C0B0F);
+  static const Color background = Color(0xFF000000);
   static const Color surfaceInput = Color(0xFF131217);
   static const Color surfaceCard = Color(0xFF16151B);
   static const Color surfaceSelected = Color(0xFF241E26);
@@ -28,4 +28,3 @@ class AppColors {
   // On-accent (text/icons placed on top of accentPrimary, e.g. primary button label)
   static const Color onAccentPrimary = Color(0xFF1A1420);
 }
-

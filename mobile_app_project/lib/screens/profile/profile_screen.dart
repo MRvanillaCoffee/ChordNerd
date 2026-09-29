@@ -139,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuList(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        gradient: AppGradients.cardTintNeutral,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

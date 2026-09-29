@@ -143,7 +143,7 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildWeekChart() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surfaceCard, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(gradient: AppGradients.cardTintNeutral, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

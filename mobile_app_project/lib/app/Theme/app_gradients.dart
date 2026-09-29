@@ -35,4 +35,24 @@ class AppGradients {
     end: Alignment.bottomRight,
     colors: [Color(0xFF1D3A2E), Color(0xFF16241E)],
   );
+
+  // Subtle tints for list-style content (search results, library cards,
+  // menu rows) so flat surfaces aren't left fully neutral.
+  static const LinearGradient cardTintPink = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF241A22), Color(0xFF16151B)],
+  );
+
+  static const LinearGradient cardTintMint = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF16241E), Color(0xFF16151B)],
+  );
+
+  static const LinearGradient cardTintNeutral = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF201A24), Color(0xFF1A1E24)],
+  );
 }

@@ -46,8 +46,8 @@ class AppTextStyles {
       );
 
   static TextStyle get label => GoogleFonts.manrope(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
         color: AppColors.textSecondary,
       );
 
