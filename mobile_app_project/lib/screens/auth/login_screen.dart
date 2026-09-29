@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import 'register_screen.dart';
@@ -164,12 +165,12 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard,
+            gradient: AppGradients.avatar,
             borderRadius: BorderRadius.circular(16),
           ),
           child: const Icon(
             Icons.music_note_rounded,
-            color: AppColors.accentPrimary,
+            color: AppColors.onAccentPrimary,
             size: 26,
           ),
         ),
@@ -261,18 +262,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSubmitButton() {
-    return ElevatedButton(
-      onPressed: _isSubmitting ? null : _handleSubmit,
-      child: _isSubmitting
-          ? const SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.onAccentPrimary,
-              ),
-            )
-          : const Text('Log in'),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppGradients.primaryButton,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: _isSubmitting ? null : _handleSubmit,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Center(
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.onAccentPrimary,
+                      ),
+                    )
+                  : Text('Log in', style: AppTextStyles.buttonLabel),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

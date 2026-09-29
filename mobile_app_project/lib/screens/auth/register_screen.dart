@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../services/auth_service.dart';
 
@@ -156,18 +157,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _handleRegister,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.onAccentPrimary,
-                        ),
-                      )
-                    : const Text('Create account'),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.primaryButton,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: _isSubmitting ? null : _handleRegister,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Center(
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.onAccentPrimary,
+                                ),
+                              )
+                            : Text('Create account', style: AppTextStyles.buttonLabel),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               GestureDetector(
