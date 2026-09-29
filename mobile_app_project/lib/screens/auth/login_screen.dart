@@ -50,7 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: AppTextStyles.bodyPrimary),
-        backgroundColor: isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
+        backgroundColor:
+            isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -196,7 +197,8 @@ class _LoginScreenState extends State<LoginScreen> {
             const TextSpan(text: "Don't have an account? "),
             TextSpan(
               text: 'Sign up',
-              style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -234,11 +236,14 @@ class _LoginScreenState extends State<LoginScreen> {
             hintText: '••••••••••',
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                _obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
                 color: AppColors.textMuted,
                 size: 18,
               ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
         ),
@@ -296,7 +301,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.local_fire_department_rounded, size: 14, color: AppColors.accentStreak),
+        const Icon(Icons.local_fire_department_rounded,
+            size: 14, color: AppColors.accentStreak),
         const SizedBox(width: 6),
         Text('3-day streak waiting for you', style: AppTextStyles.streakLabel),
       ],
@@ -327,7 +333,8 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.g_mobiledata_rounded, size: 20, color: AppColors.accentLight),
+          const Icon(Icons.g_mobiledata_rounded,
+              size: 20, color: AppColors.accentLight),
           const SizedBox(width: 6),
           Text('Continue with Google', style: AppTextStyles.bodyPrimary),
         ],
@@ -346,7 +353,8 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.facebook_rounded, size: 20, color: AppColors.accentLight),
+          const Icon(Icons.facebook_rounded,
+              size: 20, color: AppColors.accentLight),
           const SizedBox(width: 6),
           Text('Continue with Facebook', style: AppTextStyles.bodyPrimary),
         ],
@@ -365,7 +373,8 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.code_rounded, size: 18, color: AppColors.accentLight),
+          const Icon(Icons.code_rounded,
+              size: 18, color: AppColors.accentLight),
           const SizedBox(width: 6),
           Text('Continue with GitHub', style: AppTextStyles.bodyPrimary),
         ],
@@ -373,3 +382,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
