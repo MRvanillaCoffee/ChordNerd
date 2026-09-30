@@ -84,7 +84,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return TextField(
       controller: _searchController,
       style: AppTextStyles.bodyPrimary,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: 'Search songs, artists, or chords',
         prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
       ),
@@ -129,9 +129,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResultCard(SearchResult result) {
-    final iconBg = result.isChord
-        ? AppColors.accentStreak.withValues(alpha: 0.15)
-        : AppColors.accentPrimary.withValues(alpha: 0.15);
+    final iconBg = result.isChord ? AppColors.badgeBgMint : AppColors.badgeBgPink;
     final iconColor = result.isChord ? AppColors.accentStreak : AppColors.accentPrimary;
     final cardGradient = result.isChord ? AppGradients.cardTintMint : AppGradients.cardTintPink;
 
@@ -142,7 +140,12 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(gradient: cardGradient, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(12),
+          border: AppGradients.cardBorder(iconColor),
+          boxShadow: AppGradients.cardGlow(iconColor),
+        ),
         child: Row(
           children: [
             Container(
@@ -162,7 +165,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),

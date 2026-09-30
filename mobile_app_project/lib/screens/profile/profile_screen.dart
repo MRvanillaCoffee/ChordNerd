@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Chord Nerd', style: AppTextStyles.label.copyWith(
+              Text('Chord Nerd', style: AppTextStyles.label2.copyWith(
                 color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               )),
@@ -51,7 +51,7 @@ class ProfileScreen extends StatelessWidget {
         Container(
           width: 72,
           height: 72,
-          decoration: const BoxDecoration(gradient: AppGradients.avatar, shape: BoxShape.circle),
+          decoration: BoxDecoration(gradient: AppGradients.avatar, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             initial,
@@ -72,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.music_note_rounded, size: 13, color: AppColors.accentPrimary),
+              Icon(Icons.music_note_rounded, size: 13, color: AppColors.accentPrimary),
               const SizedBox(width: 6),
               Text(
                 'Intermediate', // TODO: pull from users/{uid}/skillLevel
@@ -91,16 +91,27 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Expanded(child: _statCard(value: '42.5', label: 'Hours', gradient: AppGradients.statCardPink)),
+        Expanded(child: _statCard(
+          value: '42.5',
+          label: 'Hours',
+          gradient: AppGradients.statCardPink,
+          glowColor: AppColors.accentPrimary,
+        )),
         const SizedBox(width: 10),
         Expanded(child: _statCard(
           value: '12',
           label: 'Streak',
           icon: Icons.local_fire_department_rounded,
           gradient: AppGradients.streakCard,
+          glowColor: AppColors.accentStreak,
         )),
         const SizedBox(width: 10),
-        Expanded(child: _statCard(value: '8', label: 'Songs', gradient: AppGradients.statCardMint)),
+        Expanded(child: _statCard(
+          value: '8',
+          label: 'Songs',
+          gradient: AppGradients.statCardMint,
+          glowColor: AppColors.accentStreak,
+        )),
       ],
     );
   }
@@ -109,6 +120,7 @@ class ProfileScreen extends StatelessWidget {
     required String value,
     required String label,
     required LinearGradient gradient,
+    required Color glowColor,
     IconData? icon,
   }) {
     return Container(
@@ -116,6 +128,8 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(12),
+        border: AppGradients.cardBorder(glowColor),
+        boxShadow: AppGradients.cardGlow(glowColor),
       ),
       child: Column(
         children: [
@@ -141,6 +155,8 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: AppGradients.cardTintNeutral,
         borderRadius: BorderRadius.circular(12),
+        border: AppGradients.cardBorder(AppColors.accentPrimary),
+        boxShadow: AppGradients.cardGlow(AppColors.accentPrimary),
       ),
       child: Column(
         children: [
@@ -167,14 +183,48 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.settings_outlined,
             label: 'Settings',
             onTap: () {}, // TODO: navigate to app settings
-            isLast: true,
           ),
+          _divider(),
+          _buildDarkModeRow(),
         ],
       ),
     );
   }
 
-  Widget _divider() => const Divider(height: 1, color: AppColors.border, thickness: 0.5, indent: 16, endIndent: 16);
+  Widget _divider() => Divider(height: 1, color: AppColors.border, thickness: 0.5, indent: 16, endIndent: 16);
+
+  Widget _buildDarkModeRow() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppColors.mode,
+      builder: (context, isDark, _) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(12),
+            bottomRight: Radius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                  size: 18,
+                  color: AppColors.accentLight,
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Dark mode', style: AppTextStyles.bodyPrimary)),
+                Switch(
+                  value: isDark,
+                  onChanged: (_) => AppColors.toggle(),
+                  activeThumbColor: AppColors.accentPrimary,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Widget _menuRow({
     required IconData icon,
@@ -199,7 +249,7 @@ class ProfileScreen extends StatelessWidget {
               Text(trailing, style: AppTextStyles.bodySecondary),
               const SizedBox(width: 8),
             ],
-            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -224,14 +274,14 @@ class ProfileScreen extends StatelessWidget {
         // will automatically return to LoginScreen — no manual nav needed.
       },
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: AppColors.border, width: 0.5),
+        side: BorderSide(color: AppColors.border, width: 0.5),
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.logout_rounded, size: 16, color: AppColors.accentStreak),
+          Icon(Icons.logout_rounded, size: 16, color: AppColors.accentStreak),
           const SizedBox(width: 8),
           Text(
             'Log out',

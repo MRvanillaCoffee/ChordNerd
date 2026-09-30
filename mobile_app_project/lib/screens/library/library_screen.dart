@@ -119,6 +119,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final statusColor = song.isMastered ? AppColors.accentStreak : AppColors.accentPrimary;
     final statusLabel = song.isMastered ? 'Mastered' : 'Learning';
     final cardGradient = song.isMastered ? AppGradients.cardTintMint : AppGradients.cardTintPink;
+    final badgeBg = song.isMastered ? AppColors.badgeBgMint : AppColors.badgeBgPink;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -127,14 +128,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(gradient: cardGradient, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(12),
+          border: AppGradients.cardBorder(statusColor),
+          boxShadow: AppGradients.cardGlow(statusColor),
+        ),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.15),
+                color: badgeBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
@@ -153,7 +159,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.12),
+                color: badgeBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -172,7 +178,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.library_music_outlined, size: 40, color: AppColors.textMuted),
+          Icon(Icons.library_music_outlined, size: 40, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text('No songs here yet', style: AppTextStyles.bodyPrimary),
           const SizedBox(height: 4),

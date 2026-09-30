@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'app/theme/app_colors.dart';
 import 'app/theme/app_theme.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
@@ -30,13 +31,20 @@ class ChordNerdApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Chord Nerd',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
-      home: const _AuthGate(),
+    // AppColors.mode is a ValueNotifier<bool> (true = dark). Listening to
+    // it here means toggling it anywhere in the app (e.g. a Settings
+    // switch) rebuilds the whole MaterialApp with the matching theme —
+    // light by default, dark once switched on.
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppColors.mode,
+      builder: (context, isDark, _) {
+        return MaterialApp(
+          title: 'Chord Nerd',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.current,
+          home: const _AuthGate(),
+        );
+      },
     );
   }
 }

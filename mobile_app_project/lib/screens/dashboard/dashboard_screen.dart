@@ -28,7 +28,7 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Chord Nerd', style: AppTextStyles.label.copyWith(
+              Text('Chord Nerd', style: AppTextStyles.label2.copyWith(
                 color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w600,
               )),
@@ -63,7 +63,7 @@ class DashboardScreen extends StatelessWidget {
         Container(
           width: 38,
           height: 38,
-          decoration: const BoxDecoration(gradient: AppGradients.avatar, shape: BoxShape.circle),
+          decoration: BoxDecoration(color: AppColors.accentPrimary, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             initial,
@@ -78,8 +78,10 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        gradient: AppGradients.streakCard,
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(14),
+        border: AppGradients.cardBorder(AppColors.accentStreak),
+        boxShadow: AppGradients.cardGlow(AppColors.accentStreak),
       ),
       child: Row(
         children: [
@@ -87,11 +89,11 @@ class DashboardScreen extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.accentStreak.withValues(alpha: 0.18),
+              color: AppColors.badgeBgMint,
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.local_fire_department_rounded, color: AppColors.accentStreak, size: 20),
+            child: Icon(Icons.local_fire_department_rounded, color: AppColors.accentStreak, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -111,9 +113,9 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Expanded(child: _statCard(icon: Icons.access_time_rounded, value: '42.5', label: 'Hours', gradient: AppGradients.statCardPink, iconColor: AppColors.accentPrimary)),
+        Expanded(child: _statCard(icon: Icons.access_time_rounded, value: '42.5', label: 'Hours', tint: AppColors.accentPrimary, bg: AppColors.badgeBgPink)),
         const SizedBox(width: 10),
-        Expanded(child: _statCard(icon: Icons.music_note_rounded, value: '8', label: 'Songs', gradient: AppGradients.statCardMint, iconColor: AppColors.accentStreak)),
+        Expanded(child: _statCard(icon: Icons.music_note_rounded, value: '8', label: 'Songs', tint: AppColors.accentStreak, bg: AppColors.badgeBgMint)),
       ],
     );
   }
@@ -122,16 +124,21 @@ class DashboardScreen extends StatelessWidget {
     required IconData icon,
     required String value,
     required String label,
-    required LinearGradient gradient,
-    required Color iconColor,
+    required Color tint,
+    required Color bg,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: AppGradients.cardBorder(tint),
+        boxShadow: AppGradients.cardGlow(tint),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: iconColor),
+          Icon(icon, size: 15, color: tint),
           const SizedBox(height: 6),
           Text(value, style: AppTextStyles.h2.copyWith(fontSize: 20)),
           Text(label, style: AppTextStyles.caption),
@@ -143,7 +150,12 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildWeekChart() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(gradient: AppGradients.cardTintNeutral, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(12),
+        border: AppGradients.cardBorder(AppColors.accentPrimary),
+        boxShadow: AppGradients.cardGlow(AppColors.accentPrimary),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -167,9 +179,7 @@ class DashboardScreen extends StatelessWidget {
                               heightFactor: _weekFractions[i],
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: isToday
-                                      ? AppColors.accentPrimary
-                                      : AppColors.accentStreak.withValues(alpha: 0.35 + _weekFractions[i] * 0.35),
+                                  color: isToday ? AppColors.accentPrimary : AppColors.chartInactive,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -199,7 +209,7 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildStartPracticeButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: AppGradients.primaryButton,
+        color: AppColors.accentPrimary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -214,7 +224,7 @@ class DashboardScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.play_arrow_rounded, size: 18, color: AppColors.onAccentPrimary),
+                Icon(Icons.play_arrow_rounded, size: 18, color: AppColors.onAccentPrimary),
                 const SizedBox(width: 8),
                 Text('Start practice session', style: AppTextStyles.buttonLabel),
               ],
