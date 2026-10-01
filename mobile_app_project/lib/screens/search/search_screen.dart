@@ -1,27 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../models/song.dart';
+import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 
-// TODO: wire real search — hit the local `songs` collection in Realtime
-// Database first, fall back to Uberchord for standalone chord lookups,
-// and show a "submit this song" prompt when nothing matches.
+// TODO: once a standalone chord lookup API (Uberchord) is wired in,
+// fall back to it when no song matches, so a bare chord name like "E5"
+// still returns a result.
 
 enum SearchFilter { all, chords, songs, artists }
-
-class SearchResult {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isChord;
-
-  const SearchResult({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    this.isChord = false,
-  });
-}
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -34,17 +24,78 @@ class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
   SearchFilter _filter = SearchFilter.all;
 
-  // TODO: replace with real query results
-  final List<SearchResult> _results = const [
-    SearchResult(title: 'Back in Black', subtitle: 'AC/DC · Key of E', icon: Icons.music_note_rounded),
-    SearchResult(title: 'Highway to Hell', subtitle: 'AC/DC · Key of A', icon: Icons.music_note_rounded),
-    SearchResult(title: 'E5 chord', subtitle: 'Chord diagram', icon: Icons.piano_rounded, isChord: true),
-  ];
+  List<Song> _results = [];
+  bool _isLoading = false;
+  bool _hasSearched = false;
+  Timer? _debounce;
+
+  Set<String> _savedSongIds = {};
+  StreamSubscription? _librarySub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load all songs immediately so the screen isn't empty on first open —
+    // an empty query returns everything (see DatabaseService.searchSongs).
+    _runSearch('');
+
+    // Track which songs are already saved, so their card can switch to
+    // green/mint instead of the default pink.
+    final uid = AuthService.currentUser?.uid;
+    if (uid != null) {
+      _librarySub = DatabaseService.watchLibrary(uid).listen((entries) {
+        if (mounted) {
+          setState(() => _savedSongIds = entries.map((e) => e.songId).toSet());
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
+    _librarySub?.cancel();
     super.dispose();
+  }
+
+  void _onQueryChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () => _runSearch(query));
+  }
+
+  Future<void> _runSearch(String query) async {
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+    });
+
+    final results = await DatabaseService.searchSongs(query);
+
+    if (mounted) {
+      setState(() {
+        _results = results;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveSong(Song song) async {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return;
+
+    await DatabaseService.saveToLibrary(uid: uid, song: song);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Saved "${song.title}" to Library', style: AppTextStyles.bodyPrimary),
+          backgroundColor: AppColors.surfaceCard,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   @override
@@ -63,14 +114,24 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 16),
               _buildFilterChips(),
               const SizedBox(height: 12),
-              Text('${_results.length} results', style: AppTextStyles.caption),
+              if (_hasSearched) Text('${_results.length} results', style: AppTextStyles.caption),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.separated(
-                  itemCount: _results.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) => _buildResultCard(_results[i]),
-                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : !_hasSearched
+                        ? Center(
+                            child: Text('Search for a song to get started', style: AppTextStyles.bodySecondary),
+                          )
+                        : _results.isEmpty
+                            ? Center(
+                                child: Text('No results — try submitting it below', style: AppTextStyles.bodySecondary),
+                              )
+                            : ListView.separated(
+                                itemCount: _results.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                                itemBuilder: (context, i) => _buildResultCard(_results[i]),
+                              ),
               ),
               _buildSubmitLink(context),
             ],
@@ -88,9 +149,7 @@ class _SearchScreenState extends State<SearchScreen> {
         hintText: 'Search songs, artists, or chords',
         prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
       ),
-      onChanged: (_) {
-        // TODO: debounce and trigger real search
-      },
+      onChanged: _onQueryChanged,
     );
   }
 
@@ -128,44 +187,54 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildResultCard(SearchResult result) {
-    final iconBg = result.isChord ? AppColors.badgeBgMint : AppColors.badgeBgPink;
-    final iconColor = result.isChord ? AppColors.accentStreak : AppColors.accentPrimary;
-    final cardGradient = result.isChord ? AppGradients.cardTintMint : AppGradients.cardTintPink;
+  Widget _buildResultCard(Song song) {
+    final subtitle = song.keyOfSong.isNotEmpty ? '${song.artist} · Key of ${song.keyOfSong}' : song.artist;
+    final isSaved = _savedSongIds.contains(song.id);
+
+    final cardGradient = isSaved ? AppGradients.cardTintMint : AppGradients.cardTintPink;
+    final accentColor = isSaved ? AppColors.accentStreak : AppColors.accentPrimary;
+    final badgeBg = isSaved ? AppColors.badgeBgMint : AppColors.badgeBgPink;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () {
-        // TODO: navigate to song_detail_screen.dart or chord diagram view
+        // TODO: navigate to song_detail_screen.dart with this song
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           gradient: cardGradient,
           borderRadius: BorderRadius.circular(12),
-          border: AppGradients.cardBorder(iconColor),
-          boxShadow: AppGradients.cardGlow(iconColor),
+          border: AppGradients.cardBorder(accentColor),
+          boxShadow: AppGradients.cardGlow(accentColor),
         ),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(8)),
               alignment: Alignment.center,
-              child: Icon(result.icon, size: 18, color: iconColor),
+              child: Icon(Icons.music_note_rounded, size: 18, color: accentColor),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(result.title, style: AppTextStyles.bodyPrimary.copyWith(fontWeight: FontWeight.w500)),
-                  Text(result.subtitle, style: AppTextStyles.caption),
+                  Text(song.title, style: AppTextStyles.bodyPrimary.copyWith(fontWeight: FontWeight.w500)),
+                  Text(subtitle, style: AppTextStyles.caption),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+            IconButton(
+              icon: Icon(
+                isSaved ? Icons.bookmark_rounded : Icons.bookmark_add_outlined,
+                size: 20,
+                color: isSaved ? AppColors.accentStreak : AppColors.textMuted,
+              ),
+              onPressed: isSaved ? null : () => _saveSong(song),
+            ),
           ],
         ),
       ),

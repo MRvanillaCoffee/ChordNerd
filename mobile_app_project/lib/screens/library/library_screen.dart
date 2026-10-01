@@ -2,20 +2,11 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
-
-// TODO: replace placeholder data with a real stream from Realtime Database
-// at users/{uid}/library, populated whenever a song is saved from Search
-// or Song Detail.
+import '../../models/song.dart';
+import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 
 enum LibraryFilter { all, learning, mastered }
-
-class LibrarySong {
-  final String title;
-  final String artist;
-  final bool isMastered;
-
-  const LibrarySong({required this.title, required this.artist, required this.isMastered});
-}
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -27,28 +18,30 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   LibraryFilter _filter = LibraryFilter.all;
 
-  // TODO: replace with real saved songs
-  final List<LibrarySong> _songs = const [
-    LibrarySong(title: 'Back in Black', artist: 'AC/DC', isMastered: true),
-    LibrarySong(title: 'Wonderwall', artist: 'Oasis', isMastered: false),
-    LibrarySong(title: 'Zombie', artist: 'The Cranberries', isMastered: false),
-    LibrarySong(title: 'Redemption Song', artist: 'Bob Marley', isMastered: true),
-  ];
-
-  List<LibrarySong> get _filteredSongs {
+  List<LibraryEntry> _applyFilter(List<LibraryEntry> songs) {
     switch (_filter) {
       case LibraryFilter.all:
-        return _songs;
+        return songs;
       case LibraryFilter.learning:
-        return _songs.where((s) => !s.isMastered).toList();
+        return songs.where((s) => !s.isMastered).toList();
       case LibraryFilter.mastered:
-        return _songs.where((s) => s.isMastered).toList();
+        return songs.where((s) => s.isMastered).toList();
     }
+  }
+
+  Future<void> _toggleMastered(LibraryEntry entry) async {
+    final uid = AuthService.currentUser?.uid;
+    if (uid == null) return;
+    await DatabaseService.setMastered(uid: uid, songId: entry.songId, isMastered: !entry.isMastered);
   }
 
   @override
   Widget build(BuildContext context) {
-    final songs = _filteredSongs;
+    final uid = AuthService.currentUser?.uid;
+
+    if (uid == null) {
+      return const Scaffold(body: Center(child: Text('Not signed in')));
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,13 +56,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
               _buildFilterTabs(),
               const SizedBox(height: 14),
               Expanded(
-                child: songs.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: songs.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, i) => _buildSongCard(songs[i]),
-                      ),
+                child: StreamBuilder<List<LibraryEntry>>(
+                  stream: DatabaseService.watchLibrary(uid),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final songs = _applyFilter(snapshot.data ?? []);
+
+                    return songs.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.separated(
+                            itemCount: songs.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            itemBuilder: (context, i) => _buildSongCard(songs[i]),
+                          );
+                  },
+                ),
               ),
             ],
           ),
@@ -115,7 +119,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  Widget _buildSongCard(LibrarySong song) {
+  Widget _buildSongCard(LibraryEntry song) {
     final statusColor = song.isMastered ? AppColors.accentStreak : AppColors.accentPrimary;
     final statusLabel = song.isMastered ? 'Mastered' : 'Learning';
     final cardGradient = song.isMastered ? AppGradients.cardTintMint : AppGradients.cardTintPink;
@@ -124,8 +128,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () {
-        // TODO: navigate to song_detail_screen.dart
+        // TODO: navigate to song_detail_screen.dart with song.songId
       },
+      onLongPress: () => _toggleMastered(song),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
