@@ -29,28 +29,33 @@ class DashboardScreen extends StatelessWidget {
           stream: DatabaseService.watchUserProfile(user.uid),
           builder: (context, snapshot) {
             final profile = snapshot.data;
-            final isLoading = snapshot.connectionState == ConnectionState.waiting;
+            final isLoading =
+                snapshot.connectionState == ConnectionState.waiting;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Chord Nerd', style: AppTextStyles.label.copyWith(
-                    color: AppColors.accentPrimary,
-                    fontWeight: FontWeight.w600,
-                  )),
+                  Text('Chord Nerd',
+                      style: AppTextStyles.label2.copyWith(
+                        color: AppColors.accentPrimary,
+                        fontWeight: FontWeight.w600,
+                      )),
                   const SizedBox(height: 6),
                   _buildGreeting(firstName, initial),
                   const SizedBox(height: 20),
-                  _buildStreakCard(isLoading ? 0 : (profile?.currentStreak ?? 0)),
+                  _buildStreakCard(
+                      isLoading ? 0 : (profile?.currentStreak ?? 0)),
                   const SizedBox(height: 14),
                   _buildStatsRow(
                     hours: isLoading ? 0 : (profile?.totalPracticeHours ?? 0),
                     songs: isLoading ? 0 : (profile?.songsLearned ?? 0),
                   ),
                   const SizedBox(height: 16),
-                  _buildWeekChart(isLoading ? List.filled(7, 0) : (profile?.weekMinutesList ?? List.filled(7, 0))),
+                  _buildWeekChart(isLoading
+                      ? List.filled(7, 0)
+                      : (profile?.weekMinutesList ?? List.filled(7, 0))),
                   const SizedBox(height: 20),
                   _buildStartPracticeButton(context, user.uid),
                 ],
@@ -76,11 +81,13 @@ class DashboardScreen extends StatelessWidget {
         Container(
           width: 38,
           height: 38,
-          decoration: BoxDecoration(color: AppColors.accentPrimary, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+              color: AppColors.accentPrimary, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             initial,
-            style: AppTextStyles.label.copyWith(color: AppColors.onAccentPrimary, fontWeight: FontWeight.w600),
+            style: AppTextStyles.label.copyWith(
+                color: AppColors.onAccentPrimary, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -106,7 +113,8 @@ class DashboardScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.local_fire_department_rounded, color: AppColors.accentStreak, size: 20),
+            child: Icon(Icons.local_fire_department_rounded,
+                color: AppColors.accentStreak, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -115,9 +123,11 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 Text(
                   streak > 0 ? '$streak-day streak' : 'No streak yet',
-                  style: AppTextStyles.bodyPrimary.copyWith(fontWeight: FontWeight.w500),
+                  style: AppTextStyles.bodyPrimary
+                      .copyWith(fontWeight: FontWeight.w500),
                 ),
-                Text('Practice today to keep it going', style: AppTextStyles.caption),
+                Text('Practice today to keep it going',
+                    style: AppTextStyles.caption),
               ],
             ),
           ),
@@ -129,7 +139,8 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildStatsRow({required double hours, required int songs}) {
     return Row(
       children: [
-        Expanded(child: _statCard(
+        Expanded(
+            child: _statCard(
           icon: Icons.access_time_rounded,
           value: hours.toStringAsFixed(1),
           label: 'Hours',
@@ -137,7 +148,8 @@ class DashboardScreen extends StatelessWidget {
           bg: AppColors.badgeBgPink,
         )),
         const SizedBox(width: 10),
-        Expanded(child: _statCard(
+        Expanded(
+            child: _statCard(
           icon: Icons.music_note_rounded,
           value: '$songs',
           label: 'Songs',
@@ -176,7 +188,8 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildWeekChart(List<int> weekMinutes) {
-    final maxMinutes = weekMinutes.isEmpty ? 1 : weekMinutes.reduce((a, b) => a > b ? a : b);
+    final maxMinutes =
+        weekMinutes.isEmpty ? 1 : weekMinutes.reduce((a, b) => a > b ? a : b);
     final safeMax = maxMinutes == 0 ? 1 : maxMinutes;
 
     return Container(
@@ -190,14 +203,17 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('This week', style: AppTextStyles.bodyPrimary.copyWith(fontWeight: FontWeight.w500)),
+          Text('This week',
+              style: AppTextStyles.bodyPrimary
+                  .copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 14),
           SizedBox(
             height: 70,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(7, (i) {
-                final isToday = i == DateTime.now().weekday - 1; // weekday is 1=Mon..7=Sun
+                final isToday =
+                    i == DateTime.now().weekday - 1; // weekday is 1=Mon..7=Sun
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -207,10 +223,13 @@ class DashboardScreen extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.bottomCenter,
                             child: FractionallySizedBox(
-                              heightFactor: (weekMinutes[i] / safeMax).clamp(0.05, 1.0),
+                              heightFactor:
+                                  (weekMinutes[i] / safeMax).clamp(0.05, 1.0),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: isToday ? AppColors.accentPrimary : AppColors.chartInactive,
+                                  color: isToday
+                                      ? AppColors.accentPrimary
+                                      : AppColors.chartInactive,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -221,8 +240,11 @@ class DashboardScreen extends StatelessWidget {
                         Text(
                           _weekLabels[i],
                           style: AppTextStyles.caption.copyWith(
-                            color: isToday ? AppColors.accentPrimary : AppColors.textMuted,
-                            fontWeight: isToday ? FontWeight.w500 : FontWeight.w400,
+                            color: isToday
+                                ? AppColors.accentPrimary
+                                : AppColors.textMuted,
+                            fontWeight:
+                                isToday ? FontWeight.w500 : FontWeight.w400,
                           ),
                         ),
                       ],
@@ -255,10 +277,12 @@ class DashboardScreen extends StatelessWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Practice session logged', style: AppTextStyles.bodyPrimary),
+                  content: Text('Practice session logged',
+                      style: AppTextStyles.bodyPrimary),
                   backgroundColor: AppColors.surfaceCard,
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               );
             }
@@ -268,9 +292,11 @@ class DashboardScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.play_arrow_rounded, size: 18, color: AppColors.onAccentPrimary),
+                Icon(Icons.play_arrow_rounded,
+                    size: 18, color: AppColors.onAccentPrimary),
                 const SizedBox(width: 8),
-                Text('Start practice session', style: AppTextStyles.buttonLabel),
+                Text('Start practice session',
+                    style: AppTextStyles.buttonLabel),
               ],
             ),
           ),

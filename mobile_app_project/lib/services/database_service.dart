@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import '../models/user_profile.dart';
 import '../models/song.dart';
+import '../models/chord_voicing.dart';
 
 /// Wraps all Realtime Database reads/writes for Chord Nerd outside of
 /// auth/profile bootstrap (which auth_service.dart already handles).
@@ -61,8 +62,6 @@ class DatabaseService {
   /// fine for a small catalog; swap for indexed queries once it grows).
   static Future<List<Song>> searchSongs(String query) async {
     final snapshot = await _db.ref('songs').get();
-    // ignore: avoid_print
-    print('[searchSongs] snapshot.exists=${snapshot.exists}, raw value=${snapshot.value}');
     if (!snapshot.exists) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -76,6 +75,15 @@ class DatabaseService {
     return all
         .where((s) => s.title.toLowerCase().contains(lower) || s.artist.toLowerCase().contains(lower))
         .toList();
+  }
+
+  /// Fetches a single song by its id — used when opening Song Detail from
+  /// Library, where only the lighter LibraryEntry (title/artist/status) is
+  /// on hand, not the full chord/lyric data.
+  static Future<Song?> getSongById(String songId) async {
+    final snapshot = await _db.ref('songs/$songId').get();
+    if (!snapshot.exists) return null;
+    return Song.fromMap(songId, snapshot.value as Map<dynamic, dynamic>);
   }
 
   // ---------------------------------------------------------------------
@@ -121,5 +129,42 @@ class DatabaseService {
     required String songId,
   }) async {
     await _db.ref('users/$uid/library/$songId').remove();
+  }
+
+  // ---------------------------------------------------------------------
+  // Chord diagram cache — avoids re-hitting Uberchord for the same chord
+  // every time it appears (a chord like "E5" shows up in dozens of songs).
+  // ---------------------------------------------------------------------
+
+  /// Realtime Database keys can't contain '.', '#', '$', '[', ']', so a
+  /// chord name like "C#m7" needs its symbols swapped out before use as
+  /// a path segment.
+  static String _chordCacheKey(String chordName) {
+    return chordName
+        .replaceAll('#', 'sharp')
+        .replaceAll('.', 'dot')
+        .replaceAll(r'$', 'dollar')
+        .replaceAll('[', '(')
+        .replaceAll(']', ')')
+        .replaceAll('/', '_over_');
+  }
+
+  static Future<List<ChordVoicing>?> getCachedChordVoicings(String chordName) async {
+    final snapshot = await _db.ref('chordDiagrams/${_chordCacheKey(chordName)}').get();
+    if (!snapshot.exists) return null;
+
+    final data = snapshot.value;
+    if (data is! List) return null;
+
+    return data
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => ChordVoicing.fromMap(m))
+        .toList();
+  }
+
+  static Future<void> cacheChordVoicings(String chordName, List<ChordVoicing> voicings) async {
+    await _db.ref('chordDiagrams/${_chordCacheKey(chordName)}').set(
+          voicings.map((v) => v.toMap()).toList(),
+        );
   }
 }

@@ -5,6 +5,7 @@ import '../../app/theme/app_text_styles.dart';
 import '../../models/song.dart';
 import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
+import '../song_detail/song_detail_screen.dart';
 
 enum LibraryFilter { all, learning, mastered }
 
@@ -33,6 +34,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final uid = AuthService.currentUser?.uid;
     if (uid == null) return;
     await DatabaseService.setMastered(uid: uid, songId: entry.songId, isMastered: !entry.isMastered);
+  }
+
+  Future<void> _openSong(LibraryEntry entry) async {
+    final song = await DatabaseService.getSongById(entry.songId);
+    if (!mounted) return;
+
+    if (song == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Couldn't load this song's details", style: AppTextStyles.bodyPrimary),
+          backgroundColor: AppColors.surfaceCard,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => SongDetailScreen(song: song)),
+    );
   }
 
   @override
@@ -127,9 +149,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () {
-        // TODO: navigate to song_detail_screen.dart with song.songId
-      },
+      onTap: () => _openSong(song),
       onLongPress: () => _toggleMastered(song),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

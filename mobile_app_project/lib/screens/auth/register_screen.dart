@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_gradients.dart';
-import '../../app/theme/app_text_styles.dart';
-import '../../services/auth_service.dart';
+import 'package:chord_nerd/app/theme/app_colors.dart';
+import 'package:chord_nerd/app/theme/app_gradients.dart';
+import 'package:chord_nerd/app/theme/app_text_styles.dart';
+import 'package:chord_nerd/services/auth_service.dart';
 
 enum SkillLevel { beginner, intermediate, advanced }
 
@@ -77,7 +77,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: AppTextStyles.bodyPrimary),
-        backgroundColor: isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
+        backgroundColor:
+            isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -136,14 +137,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 label: 'Password',
                 controller: _passwordController,
                 obscure: _obscurePassword,
-                onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                onToggle: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
               const SizedBox(height: 16),
               _buildPasswordField(
                 label: 'Confirm password',
                 controller: _confirmPasswordController,
                 obscure: _obscureConfirm,
-                onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                onToggle: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
               ),
               const SizedBox(height: 20),
               Text('Skill level', style: AppTextStyles.label),
@@ -153,7 +156,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 14),
                 Text(
                   _errorText!,
-                  style: AppTextStyles.bodySecondary.copyWith(color: AppColors.accentStreak),
+                  style: AppTextStyles.bodySecondary
+                      .copyWith(color: AppColors.accentStreak),
                 ),
               ],
               const SizedBox(height: 24),
@@ -179,7 +183,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: AppColors.onAccentPrimary,
                                 ),
                               )
-                            : Text('Create account', style: AppTextStyles.buttonLabel),
+                            : Text('Create account',
+                                style: AppTextStyles.buttonLabel),
                       ),
                     ),
                   ),
@@ -196,7 +201,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const TextSpan(text: 'Already have an account? '),
                       TextSpan(
                         text: 'Log in',
-                        style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: AppColors.accentPrimary,
+                            fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -250,7 +257,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             hintText: '••••••••••',
             suffixIcon: IconButton(
               icon: Icon(
-                obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                obscure
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
                 color: AppColors.textMuted,
                 size: 18,
               ),
@@ -275,13 +284,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: GestureDetector(
             onTap: () => setState(() => _skillLevel = level),
             child: Container(
-              margin: EdgeInsets.only(right: level != SkillLevel.advanced ? 8 : 0),
+              margin:
+                  EdgeInsets.only(right: level != SkillLevel.advanced ? 8 : 0),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.surfaceSelected : AppColors.surfaceInput,
+                color: isSelected
+                    ? AppColors.surfaceSelected
+                    : AppColors.surfaceInput,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isSelected ? AppColors.accentPrimary : AppColors.border,
+                  color:
+                      isSelected ? AppColors.accentPrimary : AppColors.border,
                   width: isSelected ? 1 : 0.5,
                 ),
               ),
@@ -289,7 +302,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 label,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodySecondary.copyWith(
-                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                  color:
+                      isSelected ? AppColors.textPrimary : AppColors.textMuted,
                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                 ),
               ),

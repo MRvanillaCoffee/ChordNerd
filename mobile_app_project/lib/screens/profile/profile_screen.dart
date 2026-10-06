@@ -26,10 +26,11 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Chord Nerd', style: AppTextStyles.label2.copyWith(
-                color: AppColors.accentPrimary,
-                fontWeight: FontWeight.w600,
-              )),
+              Text('Chord Nerd',
+                  style: AppTextStyles.label2.copyWith(
+                    color: AppColors.accentPrimary,
+                    fontWeight: FontWeight.w600,
+                  )),
               const SizedBox(height: 18),
               _buildHeader(initial: initial, name: displayName, email: email),
               const SizedBox(height: 22),
@@ -45,17 +46,20 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader({required String initial, required String name, required String email}) {
+  Widget _buildHeader(
+      {required String initial, required String name, required String email}) {
     return Column(
       children: [
         Container(
           width: 72,
           height: 72,
-          decoration: BoxDecoration(gradient: AppGradients.avatar, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+              gradient: AppGradients.avatar, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             initial,
-            style: AppTextStyles.h1.copyWith(color: AppColors.onAccentPrimary, fontSize: 26),
+            style: AppTextStyles.h1
+                .copyWith(color: AppColors.onAccentPrimary, fontSize: 26),
           ),
         ),
         const SizedBox(height: 12),
@@ -72,7 +76,8 @@ class ProfileScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.music_note_rounded, size: 13, color: AppColors.accentPrimary),
+              Icon(Icons.music_note_rounded,
+                  size: 13, color: AppColors.accentPrimary),
               const SizedBox(width: 6),
               Text(
                 'Intermediate', // TODO: pull from users/{uid}/skillLevel
@@ -91,14 +96,16 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Expanded(child: _statCard(
+        Expanded(
+            child: _statCard(
           value: '42.5',
           label: 'Hours',
           gradient: AppGradients.statCardPink,
           glowColor: AppColors.accentPrimary,
         )),
         const SizedBox(width: 10),
-        Expanded(child: _statCard(
+        Expanded(
+            child: _statCard(
           value: '12',
           label: 'Streak',
           icon: Icons.local_fire_department_rounded,
@@ -106,7 +113,8 @@ class ProfileScreen extends StatelessWidget {
           glowColor: AppColors.accentStreak,
         )),
         const SizedBox(width: 10),
-        Expanded(child: _statCard(
+        Expanded(
+            child: _statCard(
           value: '8',
           label: 'Songs',
           gradient: AppGradients.statCardMint,
@@ -175,7 +183,8 @@ class ProfileScreen extends StatelessWidget {
           _menuRow(
             icon: Icons.checklist_rounded,
             label: 'My submissions',
-            trailing: '3 pending', // TODO: pull real count from submissions collection
+            trailing:
+                '3 pending', // TODO: pull real count from submissions collection
             onTap: () {}, // TODO: navigate to submissions list
           ),
           _divider(),
@@ -191,7 +200,12 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Divider(height: 1, color: AppColors.border, thickness: 0.5, indent: 16, endIndent: 16);
+  Widget _divider() => Divider(
+      height: 1,
+      color: AppColors.border,
+      thickness: 0.5,
+      indent: 16,
+      endIndent: 16);
 
   Widget _buildDarkModeRow() {
     return ValueListenableBuilder<bool>(
@@ -212,7 +226,8 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.accentLight,
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text('Dark mode', style: AppTextStyles.bodyPrimary)),
+                Expanded(
+                    child: Text('Dark mode', style: AppTextStyles.bodyPrimary)),
                 Switch(
                   value: isDark,
                   onChanged: (_) => AppColors.toggle(),
@@ -236,7 +251,8 @@ class ProfileScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: isLast
-          ? const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
+          ? const BorderRadius.only(
+              bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
           : BorderRadius.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -249,7 +265,8 @@ class ProfileScreen extends StatelessWidget {
               Text(trailing, style: AppTextStyles.bodySecondary),
               const SizedBox(width: 8),
             ],
-            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+            Icon(Icons.chevron_right_rounded,
+                size: 18, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -266,7 +283,8 @@ class ProfileScreen extends StatelessWidget {
               content: Text('Logged out', style: AppTextStyles.bodyPrimary),
               backgroundColor: AppColors.surfaceCard,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
