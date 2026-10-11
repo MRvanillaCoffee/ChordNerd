@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:chord_nerd/app/theme/app_colors.dart';
-import 'package:chord_nerd/app/theme/app_gradients.dart';
-import 'package:chord_nerd/app/theme/app_text_styles.dart';
-import 'package:chord_nerd/models/song.dart';
-import 'package:chord_nerd/services/auth_service.dart';
-import 'package:chord_nerd/services/database_service.dart';
-import 'package:chord_nerd/screens/song_detail/song_detail_screen.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_gradients.dart';
+import '../../app/theme/app_text_styles.dart';
+import '../../models/song.dart';
+import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
+import '../song_detail/song_detail_screen.dart';
+import '../song_submit/song_submit_screen.dart';
 
 // TODO: once a standalone chord lookup API (Uberchord) is wired in,
 // fall back to it when no song matches, so a bare chord name like "E5"
@@ -62,8 +63,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onQueryChanged(String query) {
     _debounce?.cancel();
-    _debounce =
-        Timer(const Duration(milliseconds: 400), () => _runSearch(query));
+    _debounce = Timer(const Duration(milliseconds: 400), () => _runSearch(query));
   }
 
   Future<void> _runSearch(String query) async {
@@ -91,12 +91,10 @@ class _SearchScreenState extends State<SearchScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Saved "${song.title}" to Library',
-              style: AppTextStyles.bodyPrimary),
+          content: Text('Saved "${song.title}" to Library', style: AppTextStyles.bodyPrimary),
           backgroundColor: AppColors.surfaceCard,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -118,30 +116,23 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 16),
               _buildFilterChips(),
               const SizedBox(height: 12),
-              if (_hasSearched)
-                Text('${_results.length} results',
-                    style: AppTextStyles.caption),
+              if (_hasSearched) Text('${_results.length} results', style: AppTextStyles.caption),
               const SizedBox(height: 10),
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : !_hasSearched
                         ? Center(
-                            child: Text('Search for a song to get started',
-                                style: AppTextStyles.bodySecondary),
+                            child: Text('Search for a song to get started', style: AppTextStyles.bodySecondary),
                           )
                         : _results.isEmpty
                             ? Center(
-                                child: Text(
-                                    'No results — try submitting it below',
-                                    style: AppTextStyles.bodySecondary),
+                                child: Text('No results — try submitting it below', style: AppTextStyles.bodySecondary),
                               )
                             : ListView.separated(
                                 itemCount: _results.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, i) =>
-                                    _buildResultCard(_results[i]),
+                                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                                itemBuilder: (context, i) => _buildResultCard(_results[i]),
                               ),
               ),
               _buildSubmitLink(context),
@@ -158,8 +149,7 @@ class _SearchScreenState extends State<SearchScreen> {
       style: AppTextStyles.bodyPrimary,
       decoration: InputDecoration(
         hintText: 'Search songs, artists, or chords',
-        prefixIcon:
-            Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
+        prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
       ),
       onChanged: _onQueryChanged,
     );
@@ -182,17 +172,13 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.surfaceSelected
-                    : AppColors.surfaceCard,
+                color: isSelected ? AppColors.surfaceSelected : AppColors.surfaceCard,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 label,
                 style: AppTextStyles.caption.copyWith(
-                  color: isSelected
-                      ? AppColors.accentLight
-                      : AppColors.textSecondary,
+                  color: isSelected ? AppColors.accentLight : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                 ),
               ),
@@ -204,15 +190,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResultCard(Song song) {
-    final subtitle = song.keyOfSong.isNotEmpty
-        ? '${song.artist} · Key of ${song.keyOfSong}'
-        : song.artist;
+    final subtitle = song.keyOfSong.isNotEmpty ? '${song.artist} · Key of ${song.keyOfSong}' : song.artist;
     final isSaved = _savedSongIds.contains(song.id);
 
-    final cardGradient =
-        isSaved ? AppGradients.cardTintMint : AppGradients.cardTintPink;
-    final accentColor =
-        isSaved ? AppColors.accentStreak : AppColors.accentPrimary;
+    final cardGradient = isSaved ? AppGradients.cardTintMint : AppGradients.cardTintPink;
+    final accentColor = isSaved ? AppColors.accentStreak : AppColors.accentPrimary;
     final badgeBg = isSaved ? AppColors.badgeBgMint : AppColors.badgeBgPink;
 
     return InkWell(
@@ -235,20 +217,16 @@ class _SearchScreenState extends State<SearchScreen> {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                  color: badgeBg, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(8)),
               alignment: Alignment.center,
-              child:
-                  Icon(Icons.music_note_rounded, size: 18, color: accentColor),
+              child: Icon(Icons.music_note_rounded, size: 18, color: accentColor),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(song.title,
-                      style: AppTextStyles.bodyPrimary
-                          .copyWith(fontWeight: FontWeight.w500)),
+                  Text(song.title, style: AppTextStyles.bodyPrimary.copyWith(fontWeight: FontWeight.w500)),
                   Text(subtitle, style: AppTextStyles.caption),
                 ],
               ),
@@ -272,8 +250,13 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.only(top: 12),
       child: Center(
         child: GestureDetector(
-          onTap: () {
-            // TODO: navigate to song submission editor
+          onTap: () async {
+            await Navigator.of(context).push<Song>(
+              MaterialPageRoute(builder: (_) => const SongSubmitScreen()),
+            );
+            // A new song may now match the current query (or an empty
+            // one), so refresh the results either way.
+            _runSearch(_searchController.text);
           },
           child: RichText(
             text: TextSpan(
@@ -282,9 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 const TextSpan(text: "Can't find a song? "),
                 TextSpan(
                   text: 'Submit it',
-                  style: TextStyle(
-                      color: AppColors.accentPrimary,
-                      fontWeight: FontWeight.w500),
+                  style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
                 ),
               ],
             ),

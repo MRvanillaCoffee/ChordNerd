@@ -19,9 +19,6 @@ dependencies:
   # State management
   flutter_riverpod: ^2.6.1
 
-  # Networking (Uberchord API calls)
-  http: ^1.2.2
-
   # Fonts (Space Grotesk + Manrope)
   google_fonts: ^6.2.1
 
@@ -43,9 +40,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # assets:
-  #   - assets/images/
 
   # fonts:
   #   Not needed if using google_fonts package (fetched at runtime).

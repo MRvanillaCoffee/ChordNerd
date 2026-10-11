@@ -77,6 +77,42 @@ class DatabaseService {
         .toList();
   }
 
+  /// Adds a brand-new song to the catalog (from Search's "Submit it" link)
+  /// and returns the generated songs/{songId} key.
+  static Future<String> submitSong({
+    required String title,
+    required String artist,
+    required String keyOfSong,
+    required List<String> chordsUsed,
+    required List<String> lines,
+  }) async {
+    final ref = _db.ref('songs').push();
+    final song = Song(
+      id: ref.key!,
+      title: title,
+      artist: artist,
+      keyOfSong: keyOfSong,
+      chordsUsed: chordsUsed,
+      lines: lines,
+      verified: false,
+    );
+    await ref.set(song.toMap());
+    return ref.key!;
+  }
+
+  /// Fills in or replaces chords/lyrics on an existing catalog song (from
+  /// Song Detail's "Submit chords" button, shown when a song has none yet).
+  static Future<void> updateSongContent({
+    required String songId,
+    required List<String> chordsUsed,
+    required List<String> lines,
+  }) async {
+    await _db.ref('songs/$songId').update({
+      'chordsUsed': chordsUsed,
+      'lines': lines,
+    });
+  }
+
   /// Fetches a single song by its id — used when opening Song Detail from
   /// Library, where only the lighter LibraryEntry (title/artist/status) is
   /// on hand, not the full chord/lyric data.
@@ -132,13 +168,15 @@ class DatabaseService {
   }
 
   // ---------------------------------------------------------------------
-  // Chord diagram cache — avoids re-hitting Uberchord for the same chord
-  // every time it appears (a chord like "E5" shows up in dozens of songs).
+  // Chord diagrams — read from chordDiagrams/, imported via the Firebase
+  // console from chordDiagrams_import.json. Lets new/corrected chord
+  // shapes be added without an app update.
   // ---------------------------------------------------------------------
 
   /// Realtime Database keys can't contain '.', '#', '$', '[', ']', so a
-  /// chord name like "C#m7" needs its symbols swapped out before use as
-  /// a path segment.
+  /// chord name like "F#m" needs its symbols swapped out before use as a
+  /// path segment — must match the sanitizing used when the import JSON
+  /// was generated.
   static String _chordCacheKey(String chordName) {
     return chordName
         .replaceAll('#', 'sharp')
@@ -149,17 +187,44 @@ class DatabaseService {
         .replaceAll('/', '_over_');
   }
 
+  /// Returns the stored voicings for [chordName], or null if that key
+  /// doesn't exist under chordDiagrams/ at all. Handles both shapes
+  /// Realtime Database may hand back for a JSON array: a true List, or
+  /// (for some single/sparse-index imports) a Map keyed by index.
   static Future<List<ChordVoicing>?> getCachedChordVoicings(String chordName) async {
-    final snapshot = await _db.ref('chordDiagrams/${_chordCacheKey(chordName)}').get();
-    if (!snapshot.exists) return null;
+    final key = _chordCacheKey(chordName);
+    try {
+      final snapshot = await _db.ref('chordDiagrams/$key').get();
+      if (!snapshot.exists) {
+        // ignore: avoid_print
+        print('[chordDiagrams] no entry at chordDiagrams/$key for "$chordName"');
+        return null;
+      }
 
-    final data = snapshot.value;
-    if (data is! List) return null;
+      final data = snapshot.value;
+      Iterable<dynamic> entries;
+      if (data is List) {
+        entries = data;
+      } else if (data is Map) {
+        entries = data.values;
+      } else {
+        // ignore: avoid_print
+        print('[chordDiagrams] unexpected value type at chordDiagrams/$key: ${data.runtimeType}');
+        return null;
+      }
 
-    return data
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => ChordVoicing.fromMap(m))
-        .toList();
+      return entries
+          .whereType<Map<dynamic, dynamic>>()
+          .map((m) => ChordVoicing.fromMap(m))
+          .toList();
+    } catch (e) {
+      // Most commonly a permission-denied error from database rules —
+      // surfaced here instead of being swallowed as "not found" so it's
+      // visible in the debug console.
+      // ignore: avoid_print
+      print('[chordDiagrams] read failed for "$chordName" (key "$key"): $e');
+      rethrow;
+    }
   }
 
   static Future<void> cacheChordVoicings(String chordName, List<ChordVoicing> voicings) async {

@@ -9,6 +9,7 @@ import '../../services/database_service.dart';
 import '../../services/chord_api_service.dart';
 import '../../utils/chordpro_parser.dart';
 import '../../widgets/chord_diagram.dart';
+import '../song_submit/song_submit_screen.dart';
 
 /// Shows a song's chords laid out above its lyrics, parsed from the
 /// ChordPro-style lines stored on the Song model. Reached from a tap on
@@ -25,10 +26,17 @@ class SongDetailScreen extends StatefulWidget {
 class _SongDetailScreenState extends State<SongDetailScreen> {
   bool _isSaved = false;
   bool _isSaving = false;
+  late Song _song;
+
+  @override
+  void initState() {
+    super.initState();
+    _song = widget.song;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final song = widget.song;
+    final song = _song;
     final parsedLines = ChordProParser.parseLines(song.lines);
     final hasLyrics = song.lines.isNotEmpty;
 
@@ -63,7 +71,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
               if (hasLyrics)
                 _buildLyricsSheet(parsedLines)
               else
-                _buildNoLyricsState(),
+                _buildNoLyricsState(song),
               const SizedBox(height: 24),
             ],
           ),
@@ -178,7 +186,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     );
   }
 
-  Widget _buildNoLyricsState() {
+  Widget _buildNoLyricsState(Song song) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -203,10 +211,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           ),
           const SizedBox(height: 14),
           OutlinedButton(
-            onPressed: () {
-              // TODO: navigate to song submission editor, pre-filled with
-              // this song's title/artist
-            },
+            onPressed: () => _openSubmitChords(song),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: AppColors.border, width: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -218,6 +223,15 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     );
   }
 
+  Future<void> _openSubmitChords(Song song) async {
+    final updated = await Navigator.of(context).push<Song>(
+      MaterialPageRoute(builder: (_) => SongSubmitScreen(existingSong: song)),
+    );
+    if (updated != null && mounted) {
+      setState(() => _song = updated);
+    }
+  }
+
   Future<void> _toggleSave() async {
     final uid = AuthService.currentUser?.uid;
     if (uid == null) return;
@@ -225,9 +239,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     setState(() => _isSaving = true);
 
     if (_isSaved) {
-      await DatabaseService.removeFromLibrary(uid: uid, songId: widget.song.id);
+      await DatabaseService.removeFromLibrary(uid: uid, songId: _song.id);
     } else {
-      await DatabaseService.saveToLibrary(uid: uid, song: widget.song);
+      await DatabaseService.saveToLibrary(uid: uid, song: _song);
     }
 
     if (mounted) {
