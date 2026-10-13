@@ -1,71 +1,179 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
+import '../edit_profile/edit_profile_screen.dart';
+import '../my_submissions/my_submissions_screen.dart';
 
-// TODO: pull real stats (totalPracticeHours, currentStreak, songs learned,
-// skillLevel) from Realtime Database at users/{uid} instead of the
-// placeholder values below — e.g. via a ProfileProvider/riverpod stream.
-
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isUploadingAvatar = false;
+
+  Future<void> _changeAvatar(String uid) async {
+    final picker = ImagePicker();
+    // Kept small on purpose — this gets base64-encoded and stored inline
+    // in Realtime Database (no Firebase Storage, which requires the paid
+    // Blaze plan), so a smaller/more-compressed image keeps the database
+    // entry light and the avatar quick to load.
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 300,
+      maxHeight: 300,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      await DatabaseService.updateAvatarImage(uid: uid, avatarBase64: base64Image);
+    } catch (e) {
+      debugPrint('[avatar upload] failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Couldn't save photo — $e", style: AppTextStyles.bodyPrimary),
+            backgroundColor: AppColors.surfaceCard,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _openEditProfile(UserProfile profile) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
+    );
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Profile updated', style: AppTextStyles.bodyPrimary),
+          backgroundColor: AppColors.surfaceCard,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final displayName = user?.displayName ?? 'Guitarist';
-    final email = user?.email ?? '';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('Not signed in')));
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Chord Nerd',
-                  style: AppTextStyles.label2.copyWith(
+        child: StreamBuilder<UserProfile?>(
+          stream: DatabaseService.watchUserProfile(user.uid),
+          builder: (context, snapshot) {
+            final isLoading = snapshot.connectionState == ConnectionState.waiting;
+            final profile = snapshot.data ??
+                UserProfile(uid: user.uid, name: user.displayName ?? 'Guitarist', email: user.email ?? '', skillLevel: 'beginner');
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Chord Nerd', style: AppTextStyles.label.copyWith(
                     color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w600,
                   )),
-              const SizedBox(height: 18),
-              _buildHeader(initial: initial, name: displayName, email: email),
-              const SizedBox(height: 22),
-              _buildStatsRow(),
-              const SizedBox(height: 20),
-              _buildMenuList(context),
-              const SizedBox(height: 20),
-              _buildLogoutButton(context),
-            ],
-          ),
+                  const SizedBox(height: 18),
+                  _buildHeader(profile, user.uid),
+                  const SizedBox(height: 22),
+                  _buildStatsRow(isLoading ? null : profile),
+                  const SizedBox(height: 20),
+                  _buildMenuList(context, profile),
+                  const SizedBox(height: 20),
+                  _buildLogoutButton(context),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHeader(
-      {required String initial, required String name, required String email}) {
+  Widget _buildHeader(UserProfile profile, String uid) {
+    final initial = profile.name.isNotEmpty ? profile.name[0].toUpperCase() : '?';
+
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-              gradient: AppGradients.avatar, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: Text(
-            initial,
-            style: AppTextStyles.h1
-                .copyWith(color: AppColors.onAccentPrimary, fontSize: 26),
+        GestureDetector(
+          onTap: _isUploadingAvatar ? null : () => _changeAvatar(uid),
+          child: Stack(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: profile.avatarBase64 == null ? AppGradients.avatar : null,
+                  shape: BoxShape.circle,
+                  image: profile.avatarBase64 != null
+                      ? DecorationImage(image: MemoryImage(base64Decode(profile.avatarBase64!)), fit: BoxFit.cover)
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: profile.avatarBase64 == null
+                    ? Text(initial, style: AppTextStyles.h1.copyWith(color: AppColors.onAccentPrimary, fontSize: 26))
+                    : null,
+              ),
+              if (_isUploadingAvatar)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onAccentPrimary),
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.background, width: 2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.camera_alt_rounded, size: 12, color: AppColors.onAccentPrimary),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
-        Text(name, style: AppTextStyles.h2),
+        Text(profile.name, style: AppTextStyles.h2),
         const SizedBox(height: 2),
-        if (email.isNotEmpty) Text(email, style: AppTextStyles.bodySecondary),
+        if (profile.email.isNotEmpty) Text(profile.email, style: AppTextStyles.bodySecondary),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -76,11 +184,12 @@ class ProfileScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.music_note_rounded,
-                  size: 13, color: AppColors.accentPrimary),
+              Icon(Icons.music_note_rounded, size: 13, color: AppColors.accentPrimary),
               const SizedBox(width: 6),
               Text(
-                'Intermediate', // TODO: pull from users/{uid}/skillLevel
+                profile.skillLevel.isNotEmpty
+                    ? profile.skillLevel[0].toUpperCase() + profile.skillLevel.substring(1)
+                    : 'Beginner',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.accentLight,
                   fontWeight: FontWeight.w500,
@@ -93,29 +202,26 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(UserProfile? profile) {
     return Row(
       children: [
-        Expanded(
-            child: _statCard(
-          value: '42.5',
+        Expanded(child: _statCard(
+          value: (profile?.totalPracticeHours ?? 0).toStringAsFixed(1),
           label: 'Hours',
           gradient: AppGradients.statCardPink,
           glowColor: AppColors.accentPrimary,
         )),
         const SizedBox(width: 10),
-        Expanded(
-            child: _statCard(
-          value: '12',
+        Expanded(child: _statCard(
+          value: '${profile?.currentStreak ?? 0}',
           label: 'Streak',
           icon: Icons.local_fire_department_rounded,
           gradient: AppGradients.streakCard,
           glowColor: AppColors.accentStreak,
         )),
         const SizedBox(width: 10),
-        Expanded(
-            child: _statCard(
-          value: '8',
+        Expanded(child: _statCard(
+          value: '${profile?.songsLearned ?? 0}',
           label: 'Songs',
           gradient: AppGradients.statCardMint,
           glowColor: AppColors.accentStreak,
@@ -158,7 +264,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuList(BuildContext context) {
+  Widget _buildMenuList(BuildContext context, UserProfile profile) {
     return Container(
       decoration: BoxDecoration(
         gradient: AppGradients.cardTintNeutral,
@@ -171,7 +277,7 @@ class ProfileScreen extends StatelessWidget {
           _menuRow(
             icon: Icons.edit_outlined,
             label: 'Edit profile',
-            onTap: () {}, // TODO: navigate to edit_profile_screen.dart
+            onTap: () => _openEditProfile(profile),
           ),
           _divider(),
           _menuRow(
@@ -183,9 +289,9 @@ class ProfileScreen extends StatelessWidget {
           _menuRow(
             icon: Icons.checklist_rounded,
             label: 'My submissions',
-            trailing:
-                '3 pending', // TODO: pull real count from submissions collection
-            onTap: () {}, // TODO: navigate to submissions list
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const MySubmissionsScreen()),
+            ),
           ),
           _divider(),
           _menuRow(
@@ -200,12 +306,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Divider(
-      height: 1,
-      color: AppColors.border,
-      thickness: 0.5,
-      indent: 16,
-      endIndent: 16);
+  Widget _divider() => Divider(height: 1, color: AppColors.border, thickness: 0.5, indent: 16, endIndent: 16);
 
   Widget _buildDarkModeRow() {
     return ValueListenableBuilder<bool>(
@@ -226,12 +327,11 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.accentLight,
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: Text('Dark mode', style: AppTextStyles.bodyPrimary)),
+                Expanded(child: Text('Dark mode', style: AppTextStyles.bodyPrimary)),
                 Switch(
                   value: isDark,
                   onChanged: (_) => AppColors.toggle(),
-                  activeThumbColor: AppColors.accentPrimary,
+                  activeColor: AppColors.accentPrimary,
                 ),
               ],
             ),
@@ -251,8 +351,7 @@ class ProfileScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: isLast
-          ? const BorderRadius.only(
-              bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
+          ? const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
           : BorderRadius.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -265,8 +364,7 @@ class ProfileScreen extends StatelessWidget {
               Text(trailing, style: AppTextStyles.bodySecondary),
               const SizedBox(width: 8),
             ],
-            Icon(Icons.chevron_right_rounded,
-                size: 18, color: AppColors.textMuted),
+            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -283,13 +381,10 @@ class ProfileScreen extends StatelessWidget {
               content: Text('Logged out', style: AppTextStyles.bodyPrimary),
               backgroundColor: AppColors.surfaceCard,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
-        // TODO: once auth-state routing exists in main.dart, signing out
-        // will automatically return to LoginScreen — no manual nav needed.
       },
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: AppColors.border, width: 0.5),

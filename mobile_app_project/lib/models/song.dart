@@ -7,6 +7,7 @@ class Song {
   final List<String> chordsUsed;
   final List<String> lines; // ChordPro-style lines, e.g. "[E5]Back in black..."
   final bool verified;
+  final String? submittedBy; // uid of whoever added this song or first filled in its chords
 
   const Song({
     required this.id,
@@ -16,6 +17,7 @@ class Song {
     this.chordsUsed = const [],
     this.lines = const [],
     this.verified = false,
+    this.submittedBy,
   });
 
   factory Song.fromMap(String id, Map<dynamic, dynamic> map) {
@@ -27,6 +29,7 @@ class Song {
       chordsUsed: (map['chordsUsed'] as List?)?.map((e) => e.toString()).toList() ?? const [],
       lines: (map['lines'] as List?)?.map((e) => e.toString()).toList() ?? const [],
       verified: map['verified'] as bool? ?? false,
+      submittedBy: map['submittedBy'] as String?,
     );
   }
 
@@ -38,6 +41,7 @@ class Song {
       'chordsUsed': chordsUsed,
       'lines': lines,
       'verified': verified,
+      if (submittedBy != null) 'submittedBy': submittedBy,
     };
   }
 }

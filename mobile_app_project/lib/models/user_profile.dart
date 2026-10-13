@@ -8,6 +8,11 @@ class UserProfile {
   final int currentStreak;
   final int songsLearned;
   final Map<String, int> weeklyMinutes; // keys: mon..sun, values: minutes
+  // A small base64-encoded JPEG, stored directly in the database instead
+  // of Firebase Storage — Storage now requires the paid Blaze plan just
+  // to enable, which isn't an option here. Kept deliberately small (see
+  // ProfileScreen's image_picker settings) so this stays cheap to store.
+  final String? avatarBase64;
 
   const UserProfile({
     required this.uid,
@@ -18,6 +23,7 @@ class UserProfile {
     this.currentStreak = 0,
     this.songsLearned = 0,
     this.weeklyMinutes = const {},
+    this.avatarBase64,
   });
 
   factory UserProfile.fromMap(String uid, Map<dynamic, dynamic> map) {
@@ -33,6 +39,7 @@ class UserProfile {
             (k, v) => MapEntry(k.toString(), (v as num).toInt()),
           ) ??
           const {},
+      avatarBase64: map['avatarBase64'] as String?,
     );
   }
 
@@ -45,6 +52,7 @@ class UserProfile {
       'currentStreak': currentStreak,
       'songsLearned': songsLearned,
       'weeklyMinutes': weeklyMinutes,
+      if (avatarBase64 != null) 'avatarBase64': avatarBase64,
     };
   }
 

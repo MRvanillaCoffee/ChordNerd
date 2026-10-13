@@ -3,6 +3,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_gradients.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../models/song.dart';
+import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
 
 /// Lets a user add a brand-new song to the catalog, or fill in chords/
@@ -99,6 +100,7 @@ class _SongSubmitScreenState extends State<SongSubmitScreen> {
         .toList();
 
     try {
+      final uid = AuthService.currentUser?.uid;
       final existing = widget.existingSong;
       Song result;
 
@@ -107,6 +109,7 @@ class _SongSubmitScreenState extends State<SongSubmitScreen> {
           songId: existing.id,
           chordsUsed: _chords,
           lines: lines,
+          contributedBy: uid,
         );
         result = Song(
           id: existing.id,
@@ -116,6 +119,7 @@ class _SongSubmitScreenState extends State<SongSubmitScreen> {
           chordsUsed: _chords,
           lines: lines,
           verified: existing.verified,
+          submittedBy: existing.submittedBy ?? uid,
         );
       } else {
         final newId = await DatabaseService.submitSong(
@@ -124,6 +128,7 @@ class _SongSubmitScreenState extends State<SongSubmitScreen> {
           keyOfSong: _keyController.text.trim(),
           chordsUsed: _chords,
           lines: lines,
+          submittedBy: uid,
         );
         result = Song(
           id: newId,
@@ -133,6 +138,7 @@ class _SongSubmitScreenState extends State<SongSubmitScreen> {
           chordsUsed: _chords,
           lines: lines,
           verified: false,
+          submittedBy: uid,
         );
       }
 

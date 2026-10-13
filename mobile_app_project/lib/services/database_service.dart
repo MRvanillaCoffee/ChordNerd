@@ -54,6 +54,30 @@ class DatabaseService {
     return keys[weekday - 1]; // DateTime.weekday is 1=Mon..7=Sun
   }
 
+  /// Updates the editable parts of a profile (name, skill level) from the
+  /// Edit Profile screen.
+  static Future<void> updateProfile({
+    required String uid,
+    required String name,
+    required String skillLevel,
+  }) async {
+    await _db.ref('users/$uid').update({
+      'name': name,
+      'skillLevel': skillLevel,
+    });
+  }
+
+  /// Stores a new avatar image directly as a base64 string (see
+  /// ProfileScreen._changeAvatar, which resizes/compresses the picked
+  /// image before calling this) — avoids needing Firebase Storage, which
+  /// requires the paid Blaze plan just to enable.
+  static Future<void> updateAvatarImage({
+    required String uid,
+    required String avatarBase64,
+  }) async {
+    await _db.ref('users/$uid/avatarBase64').set(avatarBase64);
+  }
+
   // ---------------------------------------------------------------------
   // Search
   // ---------------------------------------------------------------------
@@ -85,6 +109,7 @@ class DatabaseService {
     required String keyOfSong,
     required List<String> chordsUsed,
     required List<String> lines,
+    String? submittedBy,
   }) async {
     final ref = _db.ref('songs').push();
     final song = Song(
@@ -95,6 +120,7 @@ class DatabaseService {
       chordsUsed: chordsUsed,
       lines: lines,
       verified: false,
+      submittedBy: submittedBy,
     );
     await ref.set(song.toMap());
     return ref.key!;
@@ -102,15 +128,42 @@ class DatabaseService {
 
   /// Fills in or replaces chords/lyrics on an existing catalog song (from
   /// Song Detail's "Submit chords" button, shown when a song has none yet).
+  /// Credits [contributedBy] as the submitter only if the song doesn't
+  /// already have one, so filling in a second song's chords doesn't steal
+  /// credit from whoever added the song itself.
   static Future<void> updateSongContent({
     required String songId,
     required List<String> chordsUsed,
     required List<String> lines,
+    String? contributedBy,
   }) async {
-    await _db.ref('songs/$songId').update({
+    final updates = <String, dynamic>{
       'chordsUsed': chordsUsed,
       'lines': lines,
-    });
+    };
+
+    if (contributedBy != null) {
+      final existing = await _db.ref('songs/$songId/submittedBy').get();
+      if (!existing.exists) {
+        updates['submittedBy'] = contributedBy;
+      }
+    }
+
+    await _db.ref('songs/$songId').update(updates);
+  }
+
+  /// All songs [uid] has submitted or first added chords for — drives
+  /// Profile's "My submissions" screen. One-shot client-side filter, same
+  /// approach as searchSongs; fine for a catalog this size.
+  static Future<List<Song>> fetchMySubmissions(String uid) async {
+    final snapshot = await _db.ref('songs').get();
+    if (!snapshot.exists) return [];
+
+    final data = snapshot.value as Map<dynamic, dynamic>;
+    return data.entries
+        .map((e) => Song.fromMap(e.key.toString(), e.value as Map<dynamic, dynamic>))
+        .where((s) => s.submittedBy == uid)
+        .toList();
   }
 
   /// Fetches a single song by its id — used when opening Song Detail from
