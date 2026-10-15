@@ -24,28 +24,55 @@ class DatabaseService {
     });
   }
 
-  /// Call when a practice session ends. Adds minutes to today's weekday
-  /// bucket and to the running total, and bumps the streak by 1 (simple
-  /// MVP version — doesn't yet check for missed days resetting it).
+  /// Call when a practice session ends with the real elapsed [seconds].
+  /// Adds to today's weekday bucket (whole minutes) and the exact time to
+  /// the running hours total, and updates the day-based streak.
   static Future<void> logPracticeSession({
     required String uid,
-    required int minutes,
+    required int seconds,
   }) async {
+    final minutes = (seconds / 60).round(); // for the whole-minute weekly chart
     final ref = _db.ref('users/$uid');
-    final todayKey = _weekdayKey(DateTime.now().weekday);
+    final now = DateTime.now();
+    final todayKey = _weekdayKey(now.weekday);
+    final todayDate = UserProfile.dateKey(now);
+    final yesterdayDate = UserProfile.dateKey(now.subtract(const Duration(days: 1)));
+    final thisWeekStart = UserProfile.dateKey(UserProfile.mondayOf(now));
 
     final snapshot = await ref.get();
     final current = snapshot.value as Map<dynamic, dynamic>? ?? {};
-    final currentWeekly = (current['weeklyMinutes'] as Map?) ?? {};
     final currentHours = (current['totalPracticeHours'] as num?)?.toDouble() ?? 0;
     final currentStreak = (current['currentStreak'] as num?)?.toInt() ?? 0;
+    final lastPracticeDate = current['lastPracticeDate'] as String?;
+    final storedWeekStart = current['weekStart'] as String?;
 
-    final updatedMinutesToday = ((currentWeekly[todayKey] as num?)?.toInt() ?? 0) + minutes;
+    // New week → start the chart from zero instead of carrying over
+    // last week's minutes.
+    final weekly = <String, int>{};
+    if (storedWeekStart == thisWeekStart) {
+      ((current['weeklyMinutes'] as Map?) ?? {}).forEach((k, v) {
+        weekly[k.toString()] = (v as num).toInt();
+      });
+    }
+    weekly[todayKey] = (weekly[todayKey] ?? 0) + minutes;
+
+    // Streak counts days, not sessions: a second session on the same day
+    // keeps it; practicing the day after extends it; any gap restarts at 1.
+    int newStreak;
+    if (lastPracticeDate == todayDate) {
+      newStreak = currentStreak < 1 ? 1 : currentStreak;
+    } else if (lastPracticeDate == yesterdayDate) {
+      newStreak = currentStreak + 1;
+    } else {
+      newStreak = 1;
+    }
 
     await ref.update({
-      'weeklyMinutes/$todayKey': updatedMinutesToday,
-      'totalPracticeHours': currentHours + (minutes / 60),
-      'currentStreak': currentStreak + 1,
+      'weeklyMinutes': weekly,
+      'weekStart': thisWeekStart,
+      'totalPracticeHours': currentHours + (seconds / 3600),
+      'currentStreak': newStreak,
+      'lastPracticeDate': todayDate,
     });
   }
 
@@ -211,11 +238,24 @@ class DatabaseService {
     required String uid,
     required Song song,
   }) async {
-    await _db.ref('users/$uid/library/${song.id}').set({
+    final entryRef = _db.ref('users/$uid/library/${song.id}');
+    // Already saved → leave it alone (re-saving would reset Mastered).
+    if ((await entryRef.get()).exists) return;
+
+    await entryRef.set({
       'title': song.title,
       'artist': song.artist,
       'isMastered': false,
     });
+    await _syncSongsLearned(uid);
+  }
+
+  /// Keeps the profile's "Songs" stat equal to the real library size.
+  /// Counting the library (rather than +1/-1) self-corrects older data.
+  static Future<void> _syncSongsLearned(String uid) async {
+    final lib = await _db.ref('users/$uid/library').get();
+    final count = (lib.exists && lib.value is Map) ? (lib.value as Map).length : 0;
+    await _db.ref('users/$uid/songsLearned').set(count);
   }
 
   static Future<void> setMastered({
@@ -231,6 +271,7 @@ class DatabaseService {
     required String songId,
   }) async {
     await _db.ref('users/$uid/library/$songId').remove();
+    await _syncSongsLearned(uid);
   }
 
   // ---------------------------------------------------------------------

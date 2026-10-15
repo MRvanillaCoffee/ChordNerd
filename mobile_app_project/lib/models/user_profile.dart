@@ -18,6 +18,29 @@ class UserProfile {
   // couple of things to configure here (see settings_screen.dart).
   final bool reminderEnabled;
   final String reminderTime; // "HH:mm", 24-hour
+  // "yyyy-MM-dd" of the last practice day / Monday of the week the
+  // weeklyMinutes belong to — used to reset the streak and chart.
+  final String? lastPracticeDate;
+  final String? weekStart;
+
+  static String dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  static DateTime mondayOf(DateTime d) {
+    final day = DateTime(d.year, d.month, d.day);
+    return day.subtract(Duration(days: day.weekday - 1));
+  }
+
+  /// Streak as it should display right now: still alive only if the last
+  /// practice was today or yesterday, otherwise it has lapsed to 0.
+  int get effectiveStreak {
+    final now = DateTime.now();
+    if (lastPracticeDate == dateKey(now) ||
+        lastPracticeDate == dateKey(now.subtract(const Duration(days: 1)))) {
+      return currentStreak;
+    }
+    return 0;
+  }
 
   const UserProfile({
     required this.uid,
@@ -31,6 +54,8 @@ class UserProfile {
     this.avatarBase64,
     this.reminderEnabled = false,
     this.reminderTime = '18:00',
+    this.lastPracticeDate,
+    this.weekStart,
   });
 
   factory UserProfile.fromMap(String uid, Map<dynamic, dynamic> map) {
@@ -49,6 +74,8 @@ class UserProfile {
       avatarBase64: map['avatarBase64'] as String?,
       reminderEnabled: map['reminderEnabled'] as bool? ?? false,
       reminderTime: map['reminderTime'] as String? ?? '18:00',
+      lastPracticeDate: map['lastPracticeDate'] as String?,
+      weekStart: map['weekStart'] as String?,
     );
   }
 
@@ -64,11 +91,17 @@ class UserProfile {
       if (avatarBase64 != null) 'avatarBase64': avatarBase64,
       'reminderEnabled': reminderEnabled,
       'reminderTime': reminderTime,
+      if (lastPracticeDate != null) 'lastPracticeDate': lastPracticeDate,
+      if (weekStart != null) 'weekStart': weekStart,
     };
   }
 
   /// Weekly minutes as a 7-value list, Monday first, for the dashboard chart.
+  /// Empty (all zeros) if the stored minutes belong to a previous week.
   List<int> get weekMinutesList {
+    if (weekStart != dateKey(mondayOf(DateTime.now()))) {
+      return List.filled(7, 0);
+    }
     const order = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     return order.map((d) => weeklyMinutes[d] ?? 0).toList();
   }

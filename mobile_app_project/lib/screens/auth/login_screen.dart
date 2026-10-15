@@ -50,8 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: AppTextStyles.bodyPrimary),
-        backgroundColor:
-            isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
+        backgroundColor: isError ? AppColors.surfaceCard : AppColors.surfaceSelected,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -142,8 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildSubmitButton(),
               const SizedBox(height: 16),
               _buildSignUpLink(),
-              const SizedBox(height: 14),
-              _buildStreakTeaser(),
               const SizedBox(height: 18),
               _buildDivider(),
               const SizedBox(height: 18),
@@ -197,8 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const TextSpan(text: "Don't have an account? "),
             TextSpan(
               text: 'Sign up',
-              style: TextStyle(
-                  color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
+              style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -236,14 +232,11 @@ class _LoginScreenState extends State<LoginScreen> {
             hintText: '••••••••••',
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
+                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 color: AppColors.textMuted,
                 size: 18,
               ),
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
         ),
@@ -251,13 +244,27 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showMessage('Enter your email above first, then tap Forgot password.', isError: true);
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      _showMessage('Password reset email sent — check your inbox.', isError: false);
+    } on FirebaseAuthException catch (e) {
+      _showMessage(_friendlyAuthError(e), isError: true);
+    } catch (e) {
+      _showMessage('Something went wrong. Please try again.', isError: true);
+    }
+  }
+
   Widget _buildForgotPassword() {
     return Align(
       alignment: Alignment.centerRight,
       child: GestureDetector(
-        onTap: () {
-          // TODO: navigate to forgot-password flow
-        },
+        onTap: _handleForgotPassword,
         child: Text(
           'Forgot password?',
           style: AppTextStyles.label.copyWith(color: AppColors.accentPrimary),
@@ -297,18 +304,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildStreakTeaser() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.local_fire_department_rounded,
-            size: 14, color: AppColors.accentStreak),
-        const SizedBox(width: 6),
-        Text('3-day streak waiting for you', style: AppTextStyles.streakLabel),
-      ],
-    );
-  }
-
   Widget _buildDivider() {
     return Row(
       children: [
@@ -332,7 +327,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // (GitHub's mark does invert, per its own brand guidelines).
   // ---------------------------------------------------------------------
 
-  static const _googleBlue = Color(0xFF4285F4);
   static const _facebookBlue = Color(0xFF1877F2);
   static const _githubBlack = Color(0xFF181717);
 
@@ -348,12 +342,11 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.g_mobiledata_rounded, size: 22, color: _googleBlue),
-          const SizedBox(width: 6),
+          const _GoogleLogo(size: 18),
+          const SizedBox(width: 10),
           Text(
             'Continue with Google',
-            style: AppTextStyles.bodyPrimary
-                .copyWith(color: const Color(0xFF3C4043)),
+            style: AppTextStyles.bodyPrimary.copyWith(color: const Color(0xFF3C4043)),
           ),
         ],
       ),
@@ -375,8 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           const Icon(Icons.facebook_rounded, size: 20, color: Colors.white),
           const SizedBox(width: 6),
-          Text('Continue with Facebook',
-              style: AppTextStyles.bodyPrimary.copyWith(color: Colors.white)),
+          Text('Continue with Facebook', style: AppTextStyles.bodyPrimary.copyWith(color: Colors.white)),
         ],
       ),
     );
@@ -403,10 +395,69 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Icon(Icons.code_rounded, size: 18, color: fg),
           const SizedBox(width: 6),
-          Text('Continue with GitHub',
-              style: AppTextStyles.bodyPrimary.copyWith(color: fg)),
+          Text('Continue with GitHub', style: AppTextStyles.bodyPrimary.copyWith(color: fg)),
         ],
       ),
     );
   }
+}
+
+/// The four-color Google "G", drawn with arcs so no image asset or extra
+/// package is needed. Colors are Google's fixed brand colors.
+class _GoogleLogo extends StatelessWidget {
+  final double size;
+
+  const _GoogleLogo({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  static const _blue = Color(0xFF4285F4);
+  static const _red = Color(0xFFEA4335);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _green = Color(0xFF34A853);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final stroke = s * 0.2;
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, s - stroke, s - stroke);
+
+    // Angles are in degrees clockwise from 3 o'clock.
+    void arc(Color color, double startDeg, double endDeg) {
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke;
+      canvas.drawArc(
+        rect,
+        startDeg * 3.1415926535 / 180,
+        (endDeg - startDeg) * 3.1415926535 / 180,
+        false,
+        paint,
+      );
+    }
+
+    arc(_red, 200, 315);
+    arc(_yellow, 125, 200);
+    arc(_green, 45, 125);
+    arc(_blue, 0, 45);
+
+    // Crossbar of the G.
+    canvas.drawRect(
+      Rect.fromLTWH(s / 2, s / 2 - stroke / 2, s / 2, stroke),
+      Paint()..color = _blue,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

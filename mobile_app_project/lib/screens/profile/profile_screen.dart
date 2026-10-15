@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         )),
         const SizedBox(width: 10),
         Expanded(child: _statCard(
-          value: '${profile?.currentStreak ?? 0}',
+          value: '${profile?.effectiveStreak ?? 0}',
           label: 'Streak',
           icon: Icons.local_fire_department_rounded,
           gradient: AppGradients.streakCard,

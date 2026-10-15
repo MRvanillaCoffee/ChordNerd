@@ -62,28 +62,30 @@ class _PracticeTimerScreenState extends State<PracticeTimerScreen> {
     _ticker?.cancel();
 
     final totalSeconds = _stopwatch.elapsed.inSeconds;
-    // Round to the nearest minute, but count at least 1 minute if they
-    // practiced at all (even a short burst), so it still shows up.
-    final minutes = totalSeconds <= 0
-        ? 0
-        : totalSeconds < 30
-            ? 1
-            : (totalSeconds / 60).round();
 
-    if (minutes <= 0) {
+    if (totalSeconds <= 0) {
       if (mounted) Navigator.of(context).pop();
       return;
     }
 
     setState(() => _isSaving = true);
-    await DatabaseService.logPracticeSession(uid: widget.uid, minutes: minutes);
+    // Saves the real elapsed time (no rounding up to a minute); the
+    // database service converts it to hours/minutes itself.
+    await DatabaseService.logPracticeSession(uid: widget.uid, seconds: totalSeconds);
+
+    // Say exactly what was logged: seconds under a minute, otherwise
+    // whole minutes.
+    final minutes = (totalSeconds / 60).round();
+    final loggedLabel = totalSeconds < 60
+        ? '$totalSeconds ${totalSeconds == 1 ? 'second' : 'seconds'}'
+        : '$minutes ${minutes == 1 ? 'minute' : 'minutes'}';
 
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Logged $minutes ${minutes == 1 ? 'minute' : 'minutes'} of practice',
+            'Logged $loggedLabel of practice',
             style: AppTextStyles.bodyPrimary,
           ),
           backgroundColor: AppColors.surfaceCard,

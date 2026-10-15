@@ -44,7 +44,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   _buildGreeting(firstName, initial),
                   const SizedBox(height: 20),
-                  _buildStreakCard(isLoading ? 0 : (profile?.currentStreak ?? 0)),
+                  _buildStreakCard(isLoading ? 0 : (profile?.effectiveStreak ?? 0)),
                   const SizedBox(height: 14),
                   _buildStatsRow(
                     hours: isLoading ? 0 : (profile?.totalPracticeHours ?? 0),
@@ -63,6 +63,13 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   Widget _buildGreeting(String firstName, String initial) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -70,7 +77,7 @@ class DashboardScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Good evening', style: AppTextStyles.bodySecondary),
+            Text(_greeting(), style: AppTextStyles.bodySecondary),
             Text(firstName, style: AppTextStyles.h2),
           ],
         ),
