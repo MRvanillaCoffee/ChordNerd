@@ -13,6 +13,11 @@ class UserProfile {
   // to enable, which isn't an option here. Kept deliberately small (see
   // ProfileScreen's image_picker settings) so this stays cheap to store.
   final String? avatarBase64;
+  // Notification preferences — folded into Settings rather than given
+  // their own top-level Profile menu row, since there's only ever a
+  // couple of things to configure here (see settings_screen.dart).
+  final bool reminderEnabled;
+  final String reminderTime; // "HH:mm", 24-hour
 
   const UserProfile({
     required this.uid,
@@ -24,6 +29,8 @@ class UserProfile {
     this.songsLearned = 0,
     this.weeklyMinutes = const {},
     this.avatarBase64,
+    this.reminderEnabled = false,
+    this.reminderTime = '18:00',
   });
 
   factory UserProfile.fromMap(String uid, Map<dynamic, dynamic> map) {
@@ -40,6 +47,8 @@ class UserProfile {
           ) ??
           const {},
       avatarBase64: map['avatarBase64'] as String?,
+      reminderEnabled: map['reminderEnabled'] as bool? ?? false,
+      reminderTime: map['reminderTime'] as String? ?? '18:00',
     );
   }
 
@@ -53,6 +62,8 @@ class UserProfile {
       'songsLearned': songsLearned,
       'weeklyMinutes': weeklyMinutes,
       if (avatarBase64 != null) 'avatarBase64': avatarBase64,
+      'reminderEnabled': reminderEnabled,
+      'reminderTime': reminderTime,
     };
   }
 

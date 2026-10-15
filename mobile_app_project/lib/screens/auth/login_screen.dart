@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:chord_nerd/app/theme/app_colors.dart';
-import 'package:chord_nerd/app/theme/app_gradients.dart';
-import 'package:chord_nerd/app/theme/app_text_styles.dart';
-import 'package:chord_nerd/services/auth_service.dart';
-import 'package:chord_nerd/screens/auth/register_screen.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_gradients.dart';
+import '../../app/theme/app_text_styles.dart';
+import '../../services/auth_service.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -322,59 +322,89 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Third-party buttons — colored per each provider's own brand, not the
+  // app's pink/mint palette. Google's own guidelines call for a neutral
+  // (white/light) button rather than a colored fill, so that one stays
+  // outlined with just its "G" tinted Google blue; Facebook and GitHub
+  // use their actual brand fills. These colors are fixed brand constants
+  // — unlike AppColors, they intentionally don't change with dark mode
+  // (GitHub's mark does invert, per its own brand guidelines).
+  // ---------------------------------------------------------------------
+
+  static const _googleBlue = Color(0xFF4285F4);
+  static const _facebookBlue = Color(0xFF1877F2);
+  static const _githubBlack = Color(0xFF181717);
+
   Widget _buildGoogleButton() {
     return OutlinedButton(
       onPressed: _handleGoogleSignIn,
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppColors.border, width: 0.5),
+        backgroundColor: Colors.white,
+        side: const BorderSide(color: Color(0xFFDADCE0), width: 0.5),
         padding: const EdgeInsets.symmetric(vertical: 11),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.g_mobiledata_rounded,
-              size: 20, color: AppColors.accentLight),
+          const Icon(Icons.g_mobiledata_rounded, size: 22, color: _googleBlue),
           const SizedBox(width: 6),
-          Text('Continue with Google', style: AppTextStyles.bodyPrimary),
+          Text(
+            'Continue with Google',
+            style: AppTextStyles.bodyPrimary
+                .copyWith(color: const Color(0xFF3C4043)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildFacebookButton() {
-    return OutlinedButton(
+    return ElevatedButton(
       onPressed: _handleFacebookSignIn,
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppColors.border, width: 0.5),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _facebookBlue,
+        foregroundColor: Colors.white,
+        elevation: 0,
         padding: const EdgeInsets.symmetric(vertical: 11),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.facebook_rounded, size: 20, color: AppColors.accentLight),
+          const Icon(Icons.facebook_rounded, size: 20, color: Colors.white),
           const SizedBox(width: 6),
-          Text('Continue with Facebook', style: AppTextStyles.bodyPrimary),
+          Text('Continue with Facebook',
+              style: AppTextStyles.bodyPrimary.copyWith(color: Colors.white)),
         ],
       ),
     );
   }
 
   Widget _buildGitHubButton() {
-    return OutlinedButton(
+    // GitHub's brand guidelines invert the mark for dark surfaces, so
+    // this one does track AppColors.isDark rather than using one fixed
+    // fill like Facebook's.
+    final bg = AppColors.isDark ? Colors.white : _githubBlack;
+    final fg = AppColors.isDark ? _githubBlack : Colors.white;
+
+    return ElevatedButton(
       onPressed: _handleGitHubSignIn,
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppColors.border, width: 0.5),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bg,
+        foregroundColor: fg,
+        elevation: 0,
         padding: const EdgeInsets.symmetric(vertical: 11),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.code_rounded, size: 18, color: AppColors.accentLight),
+          Icon(Icons.code_rounded, size: 18, color: fg),
           const SizedBox(width: 6),
-          Text('Continue with GitHub', style: AppTextStyles.bodyPrimary),
+          Text('Continue with GitHub',
+              style: AppTextStyles.bodyPrimary.copyWith(color: fg)),
         ],
       ),
     );

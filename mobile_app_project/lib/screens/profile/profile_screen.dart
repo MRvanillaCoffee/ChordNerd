@@ -9,6 +9,7 @@ import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
 import '../edit_profile/edit_profile_screen.dart';
 import '../my_submissions/my_submissions_screen.dart';
+import '../settings/settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -281,12 +282,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           _divider(),
           _menuRow(
-            icon: Icons.notifications_outlined,
-            label: 'Notifications',
-            onTap: () {}, // TODO: navigate to notification settings
-          ),
-          _divider(),
-          _menuRow(
             icon: Icons.checklist_rounded,
             label: 'My submissions',
             onTap: () => Navigator.of(context).push(
@@ -297,7 +292,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _menuRow(
             icon: Icons.settings_outlined,
             label: 'Settings',
-            onTap: () {}, // TODO: navigate to app settings
+            // Notifications doesn't get its own Profile row — it's just
+            // a reminder toggle, so it lives as a section inside Settings
+            // instead (see settings_screen.dart).
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => SettingsScreen(profile: profile)),
+            ),
           ),
           _divider(),
           _buildDarkModeRow(),

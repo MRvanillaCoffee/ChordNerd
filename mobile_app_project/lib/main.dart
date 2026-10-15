@@ -30,18 +30,46 @@ class ChordNerdApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // AppColors.mode is a ValueNotifier<bool> (true = dark). Listening to
-    // it here means toggling it anywhere in the app (e.g. a Settings
-    // switch) rebuilds the whole MaterialApp with the matching theme —
-    // light by default, dark once switched on.
+    // `home` is only read ONCE by MaterialApp/Navigator, to build the
+    // initial route — rebuilding MaterialApp later with a *different*
+    // `home` instance does NOT replace what's already on screen. That's
+    // why wrapping MaterialApp itself in a ValueListenableBuilder never
+    // actually repainted anything: toggling AppColors.mode built a
+    // brand-new `home` widget that the already-mounted Navigator simply
+    // ignored, so only widgets with their own direct listener (like the
+    // Switch on Profile) ever updated. So MaterialApp stays static here,
+    // and the AppColors.mode listener moves inside `home` instead (see
+    // _ThemedApp below), where it's part of the route that's actually on
+    // screen and so really does get rebuilt on toggle.
+    return const MaterialApp(
+      title: 'Chord Nerd',
+      debugShowCheckedModeBanner: false,
+      home: _ThemedApp(),
+    );
+  }
+}
+
+/// Lives inside MaterialApp's one permanent `home` route (see the comment
+/// above). Listening to AppColors.mode here — rather than around
+/// MaterialApp — is what makes dark mode actually take effect everywhere:
+/// this rebuild happens on the already-mounted route, not on a `home`
+/// value the Navigator has already stopped looking at.
+class _ThemedApp extends StatelessWidget {
+  const _ThemedApp();
+
+  @override
+  Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: AppColors.mode,
       builder: (context, isDark, _) {
-        return MaterialApp(
-          title: 'Chord Nerd',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.current,
-          home: const _AuthGate(),
+        return Theme(
+          data: AppTheme.current,
+          // Not `const` on purpose: a const _AuthGate() would be the exact
+          // same object every time this builder reruns (Dart canonicalizes
+          // const expressions), so Flutter would see an identical widget
+          // and skip rebuilding anything below it — meaning toggling dark
+          // mode would never actually repaint the signed-in screens.
+          child: _AuthGate(),
         );
       },
     );
@@ -66,9 +94,10 @@ class _AuthGate extends StatelessWidget {
 
         final user = snapshot.data;
         if (user == null) {
-          return const LoginScreen();
+          // Also not `const` — same reasoning as `home` above.
+          return LoginScreen();
         }
-        return const MainNavigation();
+        return MainNavigation();
       },
     );
   }

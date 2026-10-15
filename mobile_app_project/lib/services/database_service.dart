@@ -67,6 +67,19 @@ class DatabaseService {
     });
   }
 
+  /// Saves the practice-reminder notification preference from the
+  /// Settings screen. [reminderTime] is "HH:mm" 24-hour.
+  static Future<void> updateNotificationSettings({
+    required String uid,
+    required bool reminderEnabled,
+    required String reminderTime,
+  }) async {
+    await _db.ref('users/$uid').update({
+      'reminderEnabled': reminderEnabled,
+      'reminderTime': reminderTime,
+    });
+  }
+
   /// Stores a new avatar image directly as a base64 string (see
   /// ProfileScreen._changeAvatar, which resizes/compresses the picked
   /// image before calling this) — avoids needing Firebase Storage, which
